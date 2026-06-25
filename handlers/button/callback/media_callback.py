@@ -4,6 +4,7 @@ from handlers.button.button_helpers import create_media_size_buttons,create_medi
 from models.models import ForwardRule, MediaTypes, MediaExtensions, RuleSync
 from enums.enums import AddMode
 import logging
+from utils.i18n import t
 from utils.common import get_media_settings_text, get_db_ops
 from models.models import get_session
 from models.db_operations import DBOperations
@@ -27,7 +28,7 @@ async def callback_media_settings(event, rule_id, session, message, data):
 
 
 async def callback_set_max_media_size(event, rule_id, session, message, data):
-        await event.edit("请选择最大媒体大小(MB)：", buttons=await create_media_size_buttons(rule_id, page=0))
+        await event.edit(t('media.select_max_size'), buttons=await create_media_size_buttons(rule_id, page=0))
         return
 
 
@@ -85,8 +86,8 @@ async def callback_select_max_media_size(event, rule_id, session, message, data)
                     # 获取消息对象
                     message = await event.get_message()
 
-                    await event.edit("媒体设置：",buttons=await create_media_settings_buttons(rule))
-                    await event.answer(f"已设置最大媒体大小为: {size}MB")
+                    await event.edit(t('menu.media.header'),buttons=await create_media_settings_buttons(rule))
+                    await event.answer(t('media.alert.max_size_set', size=size))
                     logger.info("界面更新完成")
             except Exception as e:
                 logger.error(f"设置最大媒体大小时出错: {str(e)}")
@@ -105,7 +106,7 @@ async def callback_set_media_types(event, rule_id, session, message, data):
     try:
         rule = session.query(ForwardRule).get(int(rule_id))
         if not rule:
-            await event.answer("规则不存在")
+            await event.answer(t('common.alert.rule_not_found'))
             return
             
         # 获取或创建媒体类型设置
@@ -113,16 +114,16 @@ async def callback_set_media_types(event, rule_id, session, message, data):
         success, msg, media_types = await db_ops.get_media_types(session, rule.id)
         
         if not success:
-            await event.answer(f"获取媒体类型设置失败: {msg}")
+            await event.answer(t('media.alert.get_types_failed', msg=msg))
             return
             
         # 显示媒体类型选择界面
-        await event.edit("请选择要屏蔽的媒体类型", buttons=await create_media_types_buttons(rule.id, media_types))
+        await event.edit(t('media.select_types'), buttons=await create_media_types_buttons(rule.id, media_types))
         
     except Exception as e:
-        logger.error(f"设置媒体类型时出错: {str(e)}")
+        logger.error(t('media.alert.set_types_error', error=str(e)))
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer(f"设置媒体类型时出错: {str(e)}")
+        await event.answer(t('media.alert.set_types_error', error=str(e)))
     finally:
         session.close()
     return
@@ -133,7 +134,7 @@ async def callback_toggle_media_type(event, rule_id, session, message, data):
         # 正确解析数据获取rule_id和媒体类型
         parts = data.split(':')
         if len(parts) < 3:
-            await event.answer("数据格式错误")
+            await event.answer(t('common.alert.bad_data_format'))
             return
             
         # toggle_media_type:31:voice
@@ -142,13 +143,13 @@ async def callback_toggle_media_type(event, rule_id, session, message, data):
         media_type = parts[2]  
         # 检查媒体类型是否有效
         if media_type not in ['photo', 'document', 'video', 'audio', 'voice']:
-            await event.answer(f"无效的媒体类型: {media_type}")
+            await event.answer(t('media.alert.invalid_type', type=media_type))
             return
             
         # 获取规则
         rule = session.query(ForwardRule).get(int(rule_id))
         if not rule:
-            await event.answer("规则不存在")
+            await event.answer(t('common.alert.rule_not_found'))
             return
             
         # 切换媒体类型状态
@@ -156,7 +157,7 @@ async def callback_toggle_media_type(event, rule_id, session, message, data):
         success, msg = await db_ops.toggle_media_type(session, rule.id, media_type)
         
         if not success:
-            await event.answer(f"切换媒体类型失败: {msg}")
+            await event.answer(t('media.alert.toggle_type_failed', msg=msg))
             return
             
         # 检查是否启用了同步功能
@@ -217,31 +218,31 @@ async def callback_toggle_media_type(event, rule_id, session, message, data):
         success, _, media_types = await db_ops.get_media_types(session, rule.id)
         
         if not success:
-            await event.answer("获取媒体类型设置失败")
+            await event.answer(t('media.alert.get_types_failed_plain'))
             return
             
         # 更新界面
-        await event.edit("请选择要屏蔽的媒体类型", buttons=await create_media_types_buttons(rule.id, media_types))
+        await event.edit(t('media.select_types'), buttons=await create_media_types_buttons(rule.id, media_types))
         await event.answer(msg)
         
     except Exception as e:
-        logger.error(f"切换媒体类型时出错: {str(e)}")
+        logger.error(t('media.alert.toggle_type_error', error=str(e)))
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer(f"切换媒体类型时出错: {str(e)}")
+        await event.answer(t('media.alert.toggle_type_error', error=str(e)))
     finally:
         session.close()
     return
 
 
 async def callback_set_media_extensions(event, rule_id, session, message, data):
-    await event.edit("请选择要过滤的媒体扩展名：", buttons=await create_media_extensions_buttons(rule_id, page=0))
+    await event.edit(t('media.select_extensions'), buttons=await create_media_extensions_buttons(rule_id, page=0))
     return
 
 
 async def callback_media_extensions_page(event, rule_id, session, message, data):
     _, rule_id, page = data.split(':')
     page = int(page)
-    await event.edit("请选择要过滤的媒体扩展名：", buttons=await create_media_extensions_buttons(rule_id, page=page))
+    await event.edit(t('media.select_extensions'), buttons=await create_media_extensions_buttons(rule_id, page=page))
     return
 
 async def callback_toggle_media_extension(event, rule_id, session, message, data):
@@ -250,7 +251,7 @@ async def callback_toggle_media_extension(event, rule_id, session, message, data
         # 解析数据获取rule_id和扩展名
         parts = data.split(':')
         if len(parts) < 3:
-            await event.answer("数据格式错误")
+            await event.answer(t('common.alert.bad_data_format'))
             return
             
         # toggle_media_extension:31:jpg:0
@@ -266,7 +267,7 @@ async def callback_toggle_media_extension(event, rule_id, session, message, data
         # 获取规则
         rule = session.query(ForwardRule).get(int(rule_id))
         if not rule:
-            await event.answer("规则不存在")
+            await event.answer(t('common.alert.rule_not_found'))
             return
             
         # 获取当前规则已选择的扩展名
@@ -282,7 +283,7 @@ async def callback_toggle_media_extension(event, rule_id, session, message, data
             if extension_id:
                 success, msg = await db_ops.delete_media_extensions(session, rule.id, [extension_id])
                 if success:
-                    await event.answer(f"已移除扩展名: {extension}")
+                    await event.answer(t('media.alert.ext_removed', ext=extension))
                     
                     # 检查是否启用了同步功能
                     if rule.enable_sync:
@@ -322,12 +323,12 @@ async def callback_toggle_media_extension(event, rule_id, session, message, data
                                 logger.error(f"同步移除媒体扩展名到规则 {sync_rule_id} 时出错: {str(e)}")
                                 continue
                 else:
-                    await event.answer(f"移除扩展名失败: {msg}")
+                    await event.answer(t('media.alert.ext_remove_failed', msg=msg))
         else:
             # 如果不存在，则添加
             success, msg = await db_ops.add_media_extensions(session, rule.id, [extension])
             if success:
-                await event.answer(f"已添加扩展名: {extension}")
+                await event.answer(t('media.alert.ext_added', ext=extension))
                 
                 # 检查是否启用了同步功能
                 if rule.enable_sync:
@@ -363,15 +364,15 @@ async def callback_toggle_media_extension(event, rule_id, session, message, data
                             logger.error(f"同步添加媒体扩展名到规则 {sync_rule_id} 时出错: {str(e)}")
                             continue
             else:
-                await event.answer(f"添加扩展名失败: {msg}")
+                await event.answer(t('media.alert.ext_add_failed', msg=msg))
         
         # 更新界面，使用之前获取的页码
-        await event.edit("请选择要过滤的媒体扩展名：", buttons=await create_media_extensions_buttons(rule_id, page=current_page))
+        await event.edit(t('media.select_extensions'), buttons=await create_media_extensions_buttons(rule_id, page=current_page))
         
     except Exception as e:
-        logger.error(f"切换媒体扩展名时出错: {str(e)}")
+        logger.error(t('media.alert.toggle_ext_error', error=str(e)))
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer(f"切换媒体扩展名时出错: {str(e)}")
+        await event.answer(t('media.alert.toggle_ext_error', error=str(e)))
     finally:
         session.close()
     return
@@ -381,7 +382,7 @@ async def callback_toggle_media_allow_text(event, rule_id, session, message, dat
     try:
         rule = session.query(ForwardRule).get(int(rule_id))
         if not rule:
-            await event.answer("规则不存在")
+            await event.answer(t('common.alert.rule_not_found'))
             return
         
         # 切换状态
@@ -420,14 +421,13 @@ async def callback_toggle_media_allow_text(event, rule_id, session, message, dat
         await event.edit(await get_media_settings_text(), buttons=await create_media_settings_buttons(rule))
         
         # 向用户显示结果
-        status = "开启" if rule.media_allow_text else "关闭"
-        await event.answer(f"已{status}放行文本")
+        await event.answer(t('media.alert.allow_text_on') if rule.media_allow_text else t('media.alert.allow_text_off'))
         
     except Exception as e:
         session.rollback()
-        logger.error(f"切换放行文本设置时出错: {str(e)}")
+        logger.error(t('media.alert.toggle_allow_text_error', error=str(e)))
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer(f"切换放行文本设置时出错: {str(e)}")
+        await event.answer(t('media.alert.toggle_allow_text_error', error=str(e)))
     finally:
         session.close()
     return

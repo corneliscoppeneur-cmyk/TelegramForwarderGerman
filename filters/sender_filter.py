@@ -1,4 +1,5 @@
 import logging
+from utils.i18n import t
 import os
 from filters.base_filter import BaseFilter
 from enums.enums import PreviewMode
@@ -109,11 +110,11 @@ class SenderFilter(BaseFilter):
         #     text_to_send = context.message_text or ''
 
         #     # 设置原始消息链接
-        #     context.original_link = f"\n原始消息: https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
+        #     context.original_link = f"\n{t('filter.original_message_label')}https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
             
         #     # 添加每个超限文件的信息
         #     for message, size, name in context.skipped_media:
-        #         text_to_send += f"\n\n⚠️ 媒体文件 {name if name else '未命名文件'} ({size}MB) 超过大小限制"
+        #         text_to_send += t('filter.media_too_large', name=name if name else t('filter.unnamed_file'), size=size)
             
         #     # 组合完整文本
         #     text_to_send = context.sender_info + text_to_send + context.time_info + context.original_link
@@ -151,10 +152,10 @@ class SenderFilter(BaseFilter):
                 
                 # 如果有超限文件，添加提示信息
                 for message, size, name in context.skipped_media:
-                    caption_text += f"\n\n⚠️ 媒体文件 {name if name else '未命名文件'} ({size}MB) 超过大小限制"
+                    caption_text += t('filter.media_too_large', name=name if name else t('filter.unnamed_file'), size=size)
                 
                 if context.skipped_media:
-                    context.original_link = f"\n原始消息: https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
+                    context.original_link = f"\n{t('filter.original_message_label')}https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
                 # 添加时间信息和原始链接
                 caption_text += context.time_info + context.original_link
                 
@@ -206,10 +207,10 @@ class SenderFilter(BaseFilter):
             # 构建提示信息
             file_size = context.skipped_media[0][1]
             file_name = context.skipped_media[0][2]
-            original_link = f"\n原始消息: https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
+            original_link = f"\n{t('filter.original_message_label')}https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
             
             text_to_send = context.message_text or ''
-            text_to_send += f"\n\n⚠️ 媒体文件 {file_name} ({file_size}MB) 超过大小限制"
+            text_to_send += t('filter.media_too_large', name=file_name, size=file_size)
             text_to_send = context.sender_info + text_to_send + context.time_info
             
             text_to_send += original_link

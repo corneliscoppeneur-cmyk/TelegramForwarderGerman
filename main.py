@@ -7,6 +7,7 @@ from message_listener import setup_listeners
 import os
 import asyncio
 import logging
+from utils.i18n import t
 import uvicorn
 import multiprocessing
 from models.db_operations import DBOperations
@@ -168,152 +169,152 @@ async def register_bot_commands(bot):
         # 基础命令
         BotCommand(
             command='start',
-            description='开始使用'
+            description=t('botcmd.start')
         ),
         BotCommand(
             command='help',
-            description='查看帮助'
+            description=t('botcmd.help')
         ),
         # 绑定和设置
         BotCommand(
             command='bind',
-            description='绑定源聊天'
+            description=t('botcmd.bind')
         ),
         BotCommand(
             command='settings',
-            description='管理转发规则'
+            description=t('botcmd.settings')
         ),
         BotCommand(
             command='switch',
-            description='切换当前需要设置的聊天规则'
+            description=t('botcmd.switch')
         ),
         # 关键字管理
         BotCommand(
             command='add',
-            description='添加关键字'
+            description=t('botcmd.add')
         ),
         BotCommand(
             command='add_regex',
-            description='添加正则关键字'
+            description=t('botcmd.add_regex')
         ),
         BotCommand(
             command='add_all',
-            description='添加普通关键字到所有规则'
+            description=t('botcmd.add_all')
         ),
         BotCommand(
             command='add_regex_all',
-            description='添加正则表达式到所有规则'
+            description=t('botcmd.add_regex_all')
         ),
         BotCommand(
             command='list_keyword',
-            description='列出所有关键字'
+            description=t('botcmd.list_keyword')
         ),
         BotCommand(
             command='remove_keyword',
-            description='删除关键字'
+            description=t('botcmd.remove_keyword')
         ),
         BotCommand(
             command='remove_keyword_by_id',
-            description='按ID删除关键字'
+            description=t('botcmd.remove_keyword_by_id')
         ),
         BotCommand(
             command='remove_all_keyword',
-            description='删除当前频道绑定的所有规则的指定关键字'
+            description=t('botcmd.remove_all_keyword')
         ),
         # 替换规则管理
         BotCommand(
             command='replace',
-            description='添加替换规则'
+            description=t('botcmd.replace')
         ),
         BotCommand(
             command='replace_all',
-            description='添加替换规则到所有规则'
+            description=t('botcmd.replace_all')
         ),
         BotCommand(
             command='list_replace',
-            description='列出所有替换规则'
+            description=t('botcmd.list_replace')
         ),
         BotCommand(
             command='remove_replace',
-            description='删除替换规则'
+            description=t('botcmd.remove_replace')
         ),
         # 导入导出功能
         BotCommand(
             command='export_keyword',
-            description='导出当前规则的关键字'
+            description=t('botcmd.export_keyword')
         ),
         BotCommand(
             command='export_replace',
-            description='导出当前规则的替换规则'
+            description=t('botcmd.export_replace')
         ),
         BotCommand(
             command='import_keyword',
-            description='导入普通关键字'
+            description=t('botcmd.import_keyword')
         ),
         BotCommand(
             command='import_regex_keyword',
-            description='导入正则表达式关键字'
+            description=t('botcmd.import_regex_keyword')
         ),
         BotCommand(
             command='import_replace',
-            description='导入替换规则'
+            description=t('botcmd.import_replace')
         ),
         # UFB相关功能
         BotCommand(
             command='ufb_bind',
-            description='绑定ufb域名'
+            description=t('botcmd.ufb_bind')
         ),
         BotCommand(
             command='ufb_unbind',
-            description='解绑ufb域名'
+            description=t('botcmd.ufb_unbind')
         ),
         BotCommand(
             command='ufb_item_change',
-            description='切换ufb同步配置类型'
+            description=t('botcmd.ufb_item_change')
         ),
         BotCommand(
             command='clear_all_keywords',
-            description='清除当前规则的所有关键字'
+            description=t('botcmd.clear_all_keywords')
         ),
         BotCommand(
             command='clear_all_keywords_regex',
-            description='清除当前规则的所有正则关键字'
+            description=t('botcmd.clear_all_keywords_regex')
         ),
         BotCommand(
             command='clear_all_replace',
-            description='清除当前规则的所有替换规则'
+            description=t('botcmd.clear_all_replace')
         ),
         BotCommand(
             command='copy_keywords',
-            description='复制参数规则的关键字到当前规则'
+            description=t('botcmd.copy_keywords')
         ),
         BotCommand(
             command='copy_keywords_regex',
-            description='复制参数规则的正则关键字到当前规则'
+            description=t('botcmd.copy_keywords_regex')
         ),
         BotCommand(
             command='copy_replace',
-            description='复制参数规则的替换规则到当前规则'
+            description=t('botcmd.copy_replace')
         ),
         BotCommand(
             command='copy_rule',
-            description='复制参数规则到当前规则'
+            description=t('botcmd.copy_rule')
         ),
         BotCommand(
             command='changelog',
-            description='查看更新日志'
+            description=t('botcmd.changelog')
         ),
         BotCommand(
             command='list_rule',
-            description='列出所有转发规则'
+            description=t('botcmd.list_rule')
         ),
         BotCommand(
             command='delete_rule',
-            description='删除转发规则'
+            description=t('botcmd.delete_rule')
         ),
         BotCommand(
             command='delete_rss_user',
-            description='删除RSS用户'
+            description=t('botcmd.delete_rss_user')
         ),
 
 

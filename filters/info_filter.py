@@ -1,4 +1,5 @@
 import logging
+from utils.i18n import t
 import os
 import pytz
 import re
@@ -43,10 +44,10 @@ class InfoFilter(BaseFilter):
                         context.original_link = f"\n\n{link_info}"
                     except Exception as le:
                         logger.error(f'使用自定义链接模板出错: {str(le)}，使用默认格式')
-                        context.original_link = f"\n\n原始消息: {original_link}"
+                        context.original_link = f"\n\n{t('filter.original_message_label')}{original_link}"
                 else:
                     # 使用默认格式
-                    context.original_link = f"\n\n原始消息: {original_link}"
+                    context.original_link = f"\n\n{t('filter.original_message_label')}{original_link}"
                 
                 logger.info(f'添加原始链接: {context.original_link}')
             

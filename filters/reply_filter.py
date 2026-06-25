@@ -1,4 +1,5 @@
 import logging
+from utils.i18n import t
 import asyncio
 from telethon import Button
 from filters.base_filter import BaseFilter
@@ -48,7 +49,7 @@ class ReplyFilter(BaseFilter):
             first_forwarded_msg = context.forwarded_messages[0]
             
             # 创建评论区按钮
-            comment_button = Button.url("💬 查看评论区", context.comment_link)
+            comment_button = Button.url(t('filter.btn.view_comments'), context.comment_link)
             buttons = [[comment_button]]
             
             # 回复已转发的媒体组消息
@@ -57,7 +58,7 @@ class ReplyFilter(BaseFilter):
             # 发送回复消息，附带评论区按钮
             await client.send_message(
                 entity=target_chat_id,
-                message="💬 评论区",
+                message=t('filter.comments_section'),
                 buttons=buttons,
                 reply_to=first_forwarded_msg.id,
             )

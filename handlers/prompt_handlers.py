@@ -1,4 +1,5 @@
 import logging
+from utils.i18n import t
 from models.models import get_session, ForwardRule, RuleSync
 from managers.state_manager import state_manager
 from utils.common import get_ai_settings_text
@@ -28,31 +29,31 @@ async def handle_prompt_setting(event, client, sender_id, chat_id, current_state
     if current_state.startswith("set_summary_prompt:"):
         rule_id = current_state.split(":")[1]
         field_name = "summary_prompt"
-        prompt_type = "AI总结"
+        prompt_type = t('prompt.type.ai_summary')
         template_type = "ai"
         logger.info(f"检测到设置总结提示词,规则ID:{rule_id}")
     elif current_state.startswith("set_ai_prompt:"):
         rule_id = current_state.split(":")[1]
         field_name = "ai_prompt"
-        prompt_type = "AI"
+        prompt_type = t('prompt.type.ai')
         template_type = "ai"
         logger.info(f"检测到设置AI提示词,规则ID:{rule_id}")
     elif current_state.startswith("set_userinfo_template:"):
         rule_id = current_state.split(":")[1]
         field_name = "userinfo_template"
-        prompt_type = "用户信息"
+        prompt_type = t('prompt.type.userinfo')
         template_type = "userinfo"
         logger.info(f"检测到设置用户信息模板,规则ID:{rule_id}")
     elif current_state.startswith("set_time_template:"):
         rule_id = current_state.split(":")[1]
         field_name = "time_template"
-        prompt_type = "时间"
+        prompt_type = t('prompt.type.time')
         template_type = "time"
         logger.info(f"检测到设置时间模板,规则ID:{rule_id}")
     elif current_state.startswith("set_original_link_template:"):
         rule_id = current_state.split(":")[1]
         field_name = "original_link_template"
-        prompt_type = "原始链接"
+        prompt_type = t('prompt.type.link')
         template_type = "link"
         logger.info(f"检测到设置原始链接模板,规则ID:{rule_id}")
     elif current_state.startswith("add_push_channel:"):
@@ -140,7 +141,7 @@ async def handle_prompt_setting(event, client, sender_id, chat_id, current_state
                 # 其他设置页面
                 await client.send_message(
                     chat_id,
-                    f"已更新规则 {rule_id} 的{prompt_type}模板",
+                    t('prompt.template_updated', rule_id=rule_id, prompt_type=prompt_type),
                     buttons=await bot_handler.create_other_settings_buttons(rule_id=rule_id)
                 )
             
@@ -236,11 +237,11 @@ async def handle_add_push_channel(event, client, sender_id, chat_id, rule_id, me
             # 提交更改
             session.commit()
             success = True
-            message_text = "成功添加推送配置"
+            message_text = t('push.add_config.success')
         except Exception as db_error:
             session.rollback()
             success = False
-            message_text = f"添加推送配置失败: {str(db_error)}"
+            message_text = t('push.add_config.db_failed', error=str(db_error))
             logger.error(f"添加推送配置到数据库时出错: {str(db_error)}")
         
         # 清除状态
@@ -266,14 +267,14 @@ async def handle_add_push_channel(event, client, sender_id, chat_id, rule_id, me
             await send_message_and_delete(
                 bot_client,
                 chat_id,
-                f"已成功添加推送频道: {push_channel}",
+                t('push.channel_added', channel=push_channel),
                 buttons=await bot_handler.create_push_settings_buttons(rule_id)
             )
         else:
             await send_message_and_delete(
                 bot_client,
                 chat_id,
-                f"添加推送频道失败: {message_text}",
+                t('push.channel_add_failed', msg=message_text),
                 buttons=await bot_handler.create_push_settings_buttons(rule_id)
             )
         

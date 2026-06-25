@@ -1,4 +1,5 @@
 import logging
+from utils.i18n import t
 import os
 import pytz
 import asyncio
@@ -112,11 +113,11 @@ class PushFilter(BaseFilter):
                 
                 # 设置原始消息链接
                 if rule.is_original_link:
-                    context.original_link = f"\n原始消息: https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
+                    context.original_link = f"\n{t('filter.original_message_label')}https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
                 
                 # 添加每个超限文件的信息
                 for message, size, name in context.skipped_media:
-                    text_to_send += f"\n\n⚠️ 媒体文件 {name if name else '未命名文件'} ({size}MB) 超过大小限制"
+                    text_to_send += t('filter.media_too_large', name=name if name else t('filter.unnamed_file'), size=size)
                 
                 # 组合完整文本
                 if rule.is_original_sender:
@@ -165,11 +166,11 @@ class PushFilter(BaseFilter):
                 
                 # 如果有超限文件，添加提示信息
                 for message, size, name in context.skipped_media:
-                    caption_text += f"\n\n⚠️ 媒体文件 {name if name else '未命名文件'} ({size}MB) 超过大小限制"
+                    caption_text += t('filter.media_too_large', name=name if name else t('filter.unnamed_file'), size=size)
                 
                 # 添加原始链接
                 if rule.is_original_link and context.skipped_media:
-                    original_link = f"\n原始消息: https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
+                    original_link = f"\n{t('filter.original_message_label')}https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
                     caption_text += original_link
                 
                 # 添加时间信息
@@ -177,7 +178,7 @@ class PushFilter(BaseFilter):
                     caption_text += context.time_info
                 
                 # 设置默认描述（如果没有文本内容）
-                default_caption = f"收到一组媒体文件 (共{len(files)}个)"
+                default_caption = t('filter.media_group_received', count=len(files))
                 
                 # 按配置的媒体发送方式分别处理每个推送配置
                 processed_files = []
@@ -197,7 +198,7 @@ class PushFilter(BaseFilter):
                             logger.info(f'尝试一次性发送 {len(valid_files)} 个文件到 {config.push_channel}，模式: {send_mode}')
                             await self._send_push_notification(
                                 [config], 
-                                caption_text or f"收到一组媒体文件 (共{len(valid_files)}个)", 
+                                caption_text or t('filter.media_group_received', count=len(valid_files)), 
                                 None,  # 不使用单附件参数
                                 valid_files  # 使用多附件参数
                             )
@@ -207,7 +208,7 @@ class PushFilter(BaseFilter):
                             # 如果一次性发送失败，则尝试逐个发送
                             for i, file_path in enumerate(valid_files):
                                 # 第一个文件使用完整文本，后续文件使用简短描述
-                                file_caption = caption_text if i == 0 else f"媒体组的第 {i+1} 个文件"
+                                file_caption = caption_text if i == 0 else t('filter.media_group_file', num=i+1)
                                 await self._send_push_notification([config], file_caption, file_path)
                                 processed_files.append(file_path)
                     # 逐个发送文件
@@ -215,9 +216,9 @@ class PushFilter(BaseFilter):
                         for i, file_path in enumerate(valid_files):
                             # 第一个文件使用完整文本，后续文件使用简短描述
                             if i == 0:
-                                file_caption = caption_text or f"收到一组媒体文件 (共{len(valid_files)}个)"
+                                file_caption = caption_text or t('filter.media_group_received', count=len(valid_files))
                             else:
-                                file_caption = f"媒体组的第 {i+1} 个文件" if len(valid_files) > 1 else ""
+                                file_caption = t('filter.media_group_file', num=i+1) if len(valid_files) > 1 else ""
                             
                             await self._send_push_notification([config], file_caption, file_path)
                             processed_files.append(file_path)
@@ -261,7 +262,7 @@ class PushFilter(BaseFilter):
             file_name = context.skipped_media[0][2]
             
             text_to_send = context.message_text or ''
-            text_to_send += f"\n\n⚠️ 媒体文件 {file_name} ({file_size}MB) 超过大小限制"
+            text_to_send += t('filter.media_too_large', name=file_name, size=file_size)
             
             # 添加发送者信息
             if rule.is_original_sender:
@@ -273,7 +274,7 @@ class PushFilter(BaseFilter):
             
             # 添加原始链接
             if rule.is_original_link:
-                original_link = f"\n原始消息: https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
+                original_link = f"\n{t('filter.original_message_label')}https://t.me/c/{str(event.chat_id)[4:]}/{event.message.id}"
                 text_to_send += original_link
             
             # 发送文本推送
@@ -410,7 +411,7 @@ class PushFilter(BaseFilter):
                     logger.info(f'发送带{len(all_attachments)}个附件的推送，模式: {config.media_send_mode}')
                     send_result = await asyncio.to_thread(
                         apobj.notify,
-                        body=body or f"收到{len(all_attachments)}个媒体文件",
+                        body=body or t('filter.media_files_received', count=len(all_attachments)),
                         attach=all_attachments
                     )
                 elif attachment and os.path.exists(str(attachment)):

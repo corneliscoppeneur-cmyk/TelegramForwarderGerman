@@ -1,5 +1,6 @@
 from handlers.button.button_helpers import *
 from utils.auto_delete import reply_and_delete
+from utils.i18n import t
 
 async def show_list(event, command, items, formatter, title, page=1):
     """显示分页列表"""
@@ -11,9 +12,9 @@ async def show_list(event, command, items, formatter, title, page=1):
 
     if not items:
         try:
-            return await event.edit(f'没有找到任何{title}')
+            return await event.edit(t('list.none_found', title=title))
         except:
-            return await reply_and_delete(event,f'没有找到任何{title}')
+            return await reply_and_delete(event,t('list.none_found', title=title))
 
     # 获取当前页的项目
     start = (page - 1) * PAGE_SIZE
@@ -32,9 +33,9 @@ async def show_list(event, command, items, formatter, title, page=1):
                 number = parts[0]
                 content = parts[1]
                 # 如果是正则表达式，在关键字部分添加反引号
-                if ' (正则)' in content:
-                    keyword, regex_mark = content.split(' (正则)')
-                    formatted_item = f'{number}. `{keyword}` (正则)'
+                if t('callback.regex_suffix') in content:
+                    keyword, regex_mark = content.split(t('callback.regex_suffix'))
+                    formatted_item = f'{number}. `{keyword}`{t("callback.regex_suffix")}'
                 else:
                     formatted_item = f'{number}. `{content}`'
         item_list.append(formatted_item)

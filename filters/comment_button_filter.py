@@ -1,4 +1,5 @@
 import logging
+from utils.i18n import t
 import asyncio
 import time
 import telethon
@@ -237,7 +238,7 @@ class CommentButtonFilter(BaseFilter):
                     # 添加评论区按钮
                     if comment_link:
                         # 创建评论区按钮
-                        comment_button = Button.url("💬 查看评论区", comment_link)
+                        comment_button = Button.url(t('filter.btn.view_comments'), comment_link)
                         
                         # 将按钮添加到消息中
                         if not context.buttons:

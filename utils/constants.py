@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from utils.i18n import t
 
 # 加载环境变量
 load_dotenv()
@@ -77,25 +78,11 @@ USER_MESSAGE_DELETE_ENABLE = os.getenv("USER_MESSAGE_DELETE_ENABLE", "false")
 UFB_ENABLED = os.getenv("UFB_ENABLED", "false")
 
 # 菜单标题
-AI_SETTINGS_TEXT = """
-当前AI提示词：
-
-`{ai_prompt}`
-
-当前总结提示词：
-
-`{summary_prompt}`
-"""
+AI_SETTINGS_TEXT = t("menu.ai.text")
 
 # 媒体设置文本
-MEDIA_SETTINGS_TEXT = """
-媒体设置：
-"""
-PUSH_SETTINGS_TEXT = """
-推送设置：
-请前往 https://github.com/caronc/apprise/wiki 查看添加推送配置格式说明
-如 `ntfy://ntfy.sh/你的主题名`
-"""
+MEDIA_SETTINGS_TEXT = t("menu.media.text")
+PUSH_SETTINGS_TEXT = t("menu.push.text")
 
 
 # 为每个规则生成特定的路径

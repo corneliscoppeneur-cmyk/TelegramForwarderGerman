@@ -8,6 +8,7 @@ from handlers.button.button_helpers import create_ai_settings_buttons, create_mo
 from models.models import ForwardRule, RuleSync
 from telethon import Button
 import logging
+from utils.i18n import t
 from utils.common import get_main_module, get_ai_settings_text
 from utils.common import is_admin
 from scheduler.summary_scheduler import SummaryScheduler
@@ -29,7 +30,7 @@ async def callback_ai_settings(event, rule_id, session, message, data):
 
 
 async def callback_set_summary_time(event, rule_id, session, message, data):
-    await event.edit("请选择总结时间：", buttons=await create_summary_time_buttons(rule_id, page=0))
+    await event.edit(t('ai.select_summary_time'), buttons=await create_summary_time_buttons(rule_id, page=0))
     return
 
 async def callback_set_summary_prompt(event, rule_id, session, message, data):
@@ -38,14 +39,14 @@ async def callback_set_summary_prompt(event, rule_id, session, message, data):
     
     rule = session.query(ForwardRule).get(rule_id)
     if not rule:
-        await event.answer('规则不存在')
+        await event.answer(t('common.alert.rule_not_found'))
         return
 
     # 检查是否频道消息
     if isinstance(event.chat, types.Channel):
         # 检查是否是管理员
         if not await is_admin(event):
-            await event.answer('只有管理员可以修改设置')
+            await event.answer(t('common.alert.admin_only'))
             return
         user_id = os.getenv('USER_ID')
     else:
@@ -65,13 +66,10 @@ async def callback_set_summary_prompt(event, rule_id, session, message, data):
         logger.exception(e)
 
     try:
-        current_prompt = rule.summary_prompt or os.getenv('DEFAULT_SUMMARY_PROMPT', '未设置')
+        current_prompt = rule.summary_prompt or os.getenv('DEFAULT_SUMMARY_PROMPT', t('common.not_set'))
         await message.edit(
-            f"请发送新的AI总结提示词\n"
-            f"当前规则ID: `{rule_id}`\n"
-            f"当前AI总结提示词：\n\n`{current_prompt}`\n\n"
-            f"5分钟内未设置将自动取消",
-            buttons=[[Button.inline("取消", f"cancel_set_summary:{rule_id}")]]
+            t('ai.prompt.set_summary', rule_id=rule_id, current_prompt=current_prompt),
+            buttons=[[Button.inline(t('common.btn.cancel'), f"cancel_set_summary:{rule_id}")]]
         )
         logger.info("消息编辑成功")
     except Exception as e:
@@ -94,14 +92,14 @@ async def callback_set_ai_prompt(event, rule_id, session, message, data):
 
     rule = session.query(ForwardRule).get(rule_id)
     if not rule:
-        await event.answer('规则不存在')
+        await event.answer(t('common.alert.rule_not_found'))
         return
 
     # 检查是否频道消息
     if isinstance(event.chat, types.Channel):
         # 检查是否是管理员
         if not await is_admin(event):
-            await event.answer('只有管理员可以修改设置')
+            await event.answer(t('common.alert.admin_only'))
             return
         user_id = os.getenv('USER_ID')
     else:
@@ -121,13 +119,10 @@ async def callback_set_ai_prompt(event, rule_id, session, message, data):
         logger.exception(e)
 
     try:
-        current_prompt = rule.ai_prompt or os.getenv('DEFAULT_AI_PROMPT', '未设置')
+        current_prompt = rule.ai_prompt or os.getenv('DEFAULT_AI_PROMPT', t('common.not_set'))
         await message.edit(
-            f"请发送新的AI提示词\n"
-            f"当前规则ID: `{rule_id}`\n"
-            f"当前AI提示词：\n\n`{current_prompt}`\n\n"
-            f"5分钟内未设置将自动取消",
-            buttons=[[Button.inline("取消", f"cancel_set_prompt:{rule_id}")]]
+            t('ai.prompt.set_ai', rule_id=rule_id, current_prompt=current_prompt),
+            buttons=[[Button.inline(t('common.btn.cancel'), f"cancel_set_prompt:{rule_id}")]]
         )
         logger.info("消息编辑成功")
     except Exception as e:
@@ -141,7 +136,7 @@ async def callback_set_ai_prompt(event, rule_id, session, message, data):
 async def callback_time_page(event, rule_id, session, message, data):
     _, rule_id, page = data.split(':')
     page = int(page)
-    await event.edit("请选择总结时间：", buttons=await create_summary_time_buttons(rule_id, page=page))
+    await event.edit(t('ai.select_summary_time'), buttons=await create_summary_time_buttons(rule_id, page=page))
     return
 
 
@@ -289,13 +284,13 @@ async def callback_model_page(event, rule_id, session, message, data):
     # 处理翻页
     _, rule_id, page = data.split(':')
     page = int(page)
-    await event.edit("请选择AI模型：", buttons=await create_model_buttons(rule_id, page=page))
+    await event.edit(t('ai.select_model'), buttons=await create_model_buttons(rule_id, page=page))
     return
 
 
 
 async def callback_change_model(event, rule_id, session, message, data):
-    await event.edit("请选择AI模型：", buttons=await create_model_buttons(rule_id, page=0))
+    await event.edit(t('ai.select_model'), buttons=await create_model_buttons(rule_id, page=0))
     return
 
 
@@ -310,7 +305,7 @@ async def callback_cancel_set_prompt(event, rule_id, session, message, data):
             state_manager.clear_state(event.sender_id, abs(event.chat_id))
             # 返回到 AI 设置页面
             await event.edit(await get_ai_settings_text(rule), buttons=await create_ai_settings_buttons(rule))
-            await event.answer("已取消设置")
+            await event.answer(t('common.alert.cancelled'))
     finally:
         session.close()
     return
@@ -328,7 +323,7 @@ async def callback_cancel_set_summary(event, rule_id, session, message, data):
             state_manager.clear_state(event.sender_id, abs(event.chat_id))
             # 返回到 AI 设置页面
             await event.edit(await get_ai_settings_text(rule), buttons=await create_ai_settings_buttons(rule))
-            await event.answer("已取消设置")
+            await event.answer(t('common.alert.cancelled'))
     finally:
         session.close()
     return
@@ -340,7 +335,7 @@ async def callback_summary_now(event, rule_id, session, message, data):
     try:
         rule = session.query(ForwardRule).get(int(rule_id))
         if not rule:
-            await event.answer("规则不存在")
+            await event.answer(t('common.alert.rule_not_found'))
             return
         
         main = await get_main_module()
@@ -348,12 +343,11 @@ async def callback_summary_now(event, rule_id, session, message, data):
         bot_client = main.bot_client
 
         scheduler = SummaryScheduler(user_client, bot_client)
-        await event.answer("开始执行总结，请稍候...")
+        await event.answer(t('ai.alert.summary_started'))
         
         await message.edit(
-            f"正在为规则 {rule_id}（{rule.source_chat.name} -> {rule.target_chat.name}）生成总结...\n"
-            f"处理需要一定时间，请耐心等待。",
-            buttons=[[Button.inline("返回", f"ai_settings:{rule_id}")]]
+            t('ai.summary.generating', rule_id=rule_id, source=rule.source_chat.name, target=rule.target_chat.name),
+            buttons=[[Button.inline(t('common.back'), f"ai_settings:{rule_id}")]]
         )
         
         try:
@@ -364,13 +358,13 @@ async def callback_summary_now(event, rule_id, session, message, data):
             logger.error(f"执行总结任务失败: {str(e)}")
             logger.error(traceback.format_exc())
             await message.edit(
-                f"总结生成失败: {str(e)}",
-                buttons=[[Button.inline("返回", f"ai_settings:{rule_id}")]]
+                t('ai.summary.failed', error=str(e)),
+                buttons=[[Button.inline(t('common.back'), f"ai_settings:{rule_id}")]]
             )
     except Exception as e:
         logger.error(f"处理总结时出错: {str(e)}")
         logger.error(traceback.format_exc())
-        await event.answer(f"处理时出错: {str(e)}")
+        await event.answer(t('ai.alert.processing_error', error=str(e)))
     finally:
         session.close()
     

@@ -8,6 +8,7 @@ from handlers.button.button_helpers import create_media_size_buttons,create_medi
 from models.models import ForwardRule, MediaTypes, MediaExtensions, RuleSync, Keyword, ReplaceRule
 from enums.enums import AddMode
 import logging
+from utils.i18n import t
 from utils.common import get_media_settings_text, get_db_ops
 from models.models import get_session
 from models.db_operations import DBOperations
@@ -24,7 +25,7 @@ logger = logging.getLogger(__name__)
 
 
 async def callback_other_settings(event, rule_id, session, message, data):
-    await event.edit("其他设置：", buttons=await create_other_settings_buttons(rule_id=rule_id))
+    await event.edit(t('menu.other.header'), buttons=await create_other_settings_buttons(rule_id=rule_id))
     return
 
 async def callback_copy_rule(event, rule_id, session, message, data):
@@ -46,11 +47,11 @@ async def callback_copy_rule(event, rule_id, session, message, data):
 
         # 创建规则选择按钮
         buttons = await create_copy_rule_buttons(source_rule_id, page)
-        await event.edit("请选择要将当前规则复制到的目标规则：", buttons=buttons)
+        await event.edit(t('other.select_copy_rule_target'), buttons=buttons)
     except Exception as e:
         logger.error(f"显示复制规则选择界面时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer("显示复制规则界面失败")
+        await event.answer(t('other.alert.show_copy_rule_failed'))
 
     return
 
@@ -79,8 +80,8 @@ async def create_copy_rule_buttons(rule_id, page=0):
 
         current_rule = session.query(ForwardRule).get(source_rule_id)
         if not current_rule:
-            buttons.append([Button.inline('❌ 规则不存在', 'noop')])
-            buttons.append([Button.inline('关闭', 'close_settings')])
+            buttons.append([Button.inline(t('common.rule_not_found'), 'noop')])
+            buttons.append([Button.inline(t('common.close'), 'close_settings')])
             return buttons
 
         # 获取所有规则（除了当前规则）
@@ -94,8 +95,8 @@ async def create_copy_rule_buttons(rule_id, page=0):
 
         if total_rules == 0:
             buttons.append([
-                Button.inline('👈 返回', f"other_settings:{source_rule_id}"),
-                Button.inline('❌ 关闭', 'close_settings')
+                Button.inline(t('common.btn.back'), f"other_settings:{source_rule_id}"),
+                Button.inline(t('common.btn.close'), 'close_settings')
             ])
             return buttons
 
@@ -141,8 +142,8 @@ async def create_copy_rule_buttons(rule_id, page=0):
             buttons.append(page_buttons)
 
         buttons.append([
-            Button.inline('👈 返回', f"other_settings:{source_rule_id}"),
-            Button.inline('❌ 关闭', 'close_settings')
+            Button.inline(t('common.btn.back'), f"other_settings:{source_rule_id}"),
+            Button.inline(t('common.btn.close'), 'close_settings')
         ])
 
     finally:
@@ -160,7 +161,7 @@ async def callback_perform_copy_rule(event, rule_id_data, session, message, data
         # 解析规则ID
         parts = rule_id_data.split(':')
         if len(parts) != 2:
-            await event.answer("数据格式错误")
+            await event.answer(t('common.alert.bad_data_format'))
             return
 
         source_rule_id = int(parts[0])
@@ -171,11 +172,11 @@ async def callback_perform_copy_rule(event, rule_id_data, session, message, data
         target_rule = session.query(ForwardRule).get(target_rule_id)
 
         if not source_rule or not target_rule:
-            await event.answer("源规则或目标规则不存在")
+            await event.answer(t('other.alert.src_or_target_not_exist'))
             return
 
         if source_rule.id == target_rule.id:
-            await event.answer('不能复制规则到自身')
+            await event.answer(t('other.alert.cannot_copy_self'))
             return
 
         # 记录复制的各个部分成功数量
@@ -328,19 +329,13 @@ async def callback_perform_copy_rule(event, rule_id_data, session, message, data
 
         # 构建消息内容
         result_message = (
-            f"✅ 已从规则 `{source_rule_id}` 复制到规则 `{target_rule.id}`\n\n"
-            f"普通关键字: 成功复制 {keywords_normal_success} 个, 跳过重复 {keywords_normal_skip} 个\n"
-            f"正则关键字: 成功复制 {keywords_regex_success} 个, 跳过重复 {keywords_regex_skip} 个\n"
-            f"替换规则: 成功复制 {replace_rules_success} 个, 跳过重复 {replace_rules_skip} 个\n"
-            f"媒体扩展名: 成功复制 {media_extensions_success} 个, 跳过重复 {media_extensions_skip} 个\n"
-            f"同步规则: 成功复制 {rule_syncs_success} 个, 跳过重复 {rule_syncs_skip} 个\n"
-            f"媒体类型设置和其他规则设置已复制\n"
+            t('other.copy_rule.result', source=source_rule_id, target=target_rule.id, kn_ok=keywords_normal_success, kn_skip=keywords_normal_skip, kr_ok=keywords_regex_success, kr_skip=keywords_regex_skip, rr_ok=replace_rules_success, rr_skip=replace_rules_skip, me_ok=media_extensions_success, me_skip=media_extensions_skip, rs_ok=rule_syncs_success, rs_skip=rule_syncs_skip)
         )
 
         # 创建返回设置按钮
         buttons = [[
-            Button.inline('👈 返回设置', f"other_settings:{source_rule.id}"),
-            Button.inline('❌ 关闭', 'close_settings')
+            Button.inline(t('common.btn.back_settings'), f"other_settings:{source_rule.id}"),
+            Button.inline(t('common.btn.close'), 'close_settings')
         ]]
 
         # 删除原消息
@@ -355,12 +350,12 @@ async def callback_perform_copy_rule(event, rule_id_data, session, message, data
             parse_mode='markdown'
         )
 
-        await event.answer(f"已从规则 {source_rule_id} 复制所有设置到规则 {target_rule_id}")
+        await event.answer(t('other.alert.copied_all', source=source_rule_id, target=target_rule_id))
 
     except Exception as e:
         logger.error(f"复制规则时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer(f"复制规则失败: {str(e)}")
+        await event.answer(t('other.alert.copy_rule_failed', error=str(e)))
     return
 
 async def callback_copy_keyword(event, rule_id, session, message, data):
@@ -372,12 +367,12 @@ async def callback_copy_keyword(event, rule_id, session, message, data):
     try:
         # 调用通用的规则选择函数
         await show_rule_selection(
-            event, rule_id, data, "请选择要将当前规则的关键字复制到的目标规则：", "perform_copy_keyword"
+            event, rule_id, data, t('other.select_copy_keyword_target'), "perform_copy_keyword"
         )
     except Exception as e:
         logger.error(f"显示复制关键字选择界面时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer("显示复制关键字界面失败")
+        await event.answer(t('other.alert.show_copy_keyword_failed'))
     return
 
 async def callback_copy_replace(event, rule_id, session, message, data):
@@ -389,12 +384,12 @@ async def callback_copy_replace(event, rule_id, session, message, data):
     try:
         # 调用通用的规则选择函数
         await show_rule_selection(
-            event, rule_id, data, "请选择要将当前规则的替换规则复制到的目标规则：", "perform_copy_replace"
+            event, rule_id, data, t('other.select_copy_replace_target'), "perform_copy_replace"
         )
     except Exception as e:
         logger.error(f"显示复制替换规则选择界面时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer("显示复制替换规则界面失败")
+        await event.answer(t('other.alert.show_copy_replace_failed'))
     return
 
 async def callback_perform_copy_keyword(event, rule_id_data, session, message, data):
@@ -461,20 +456,18 @@ async def callback_perform_copy_keyword(event, rule_id_data, session, message, d
 
         # 构建消息内容
         result_message = (
-            f"✅ 已从规则 `{source_rule_id}` 复制关键字到规则 `{target_rule.id}`\n\n"
-            f"普通关键字: 成功复制 {keywords_normal_success} 个, 跳过重复 {keywords_normal_skip} 个\n"
-            f"正则关键字: 成功复制 {keywords_regex_success} 个, 跳过重复 {keywords_regex_skip} 个\n"
+            t('other.copy_keyword.result', source=source_rule_id, target=target_rule.id, kn_ok=keywords_normal_success, kn_skip=keywords_normal_skip, kr_ok=keywords_regex_success, kr_skip=keywords_regex_skip)
         )
 
         # 发送结果消息
         await send_result_message(event, message, result_message, source_rule.id)
 
-        await event.answer(f"已从规则 {source_rule_id} 复制关键字到规则 {target_rule_id}")
+        await event.answer(t('other.alert.copied_keyword', source=source_rule_id, target=target_rule_id))
 
     except Exception as e:
         logger.error(f"复制关键字时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer(f"复制关键字失败: {str(e)}")
+        await event.answer(t('other.alert.copy_keyword_failed', error=str(e)))
     return
 
 async def callback_perform_copy_replace(event, rule_id_data, session, message, data):
@@ -519,19 +512,18 @@ async def callback_perform_copy_replace(event, rule_id_data, session, message, d
 
         # 构建消息内容
         result_message = (
-            f"✅ 已从规则 `{source_rule_id}` 复制替换规则到规则 `{target_rule.id}`\n\n"
-            f"替换规则: 成功复制 {replace_rules_success} 个, 跳过重复 {replace_rules_skip} 个\n"
+            t('other.copy_replace.result', source=source_rule_id, target=target_rule.id, rr_ok=replace_rules_success, rr_skip=replace_rules_skip)
         )
 
         # 发送结果消息
         await send_result_message(event, message, result_message, source_rule.id)
 
-        await event.answer(f"已从规则 {source_rule_id} 复制替换规则到规则 {target_rule_id}")
+        await event.answer(t('other.alert.copied_replace', source=source_rule_id, target=target_rule_id))
 
     except Exception as e:
         logger.error(f"复制替换规则时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer(f"复制替换规则失败: {str(e)}")
+        await event.answer(t('other.alert.copy_replace_failed', error=str(e)))
     return
 
 # 通用辅助函数
@@ -586,8 +578,8 @@ async def create_rule_selection_buttons(rule_id, page=0, callback_action="perfor
 
         current_rule = session.query(ForwardRule).get(source_rule_id)
         if not current_rule:
-            buttons.append([Button.inline('❌ 规则不存在', 'noop')])
-            buttons.append([Button.inline('关闭', 'close_settings')])
+            buttons.append([Button.inline(t('common.rule_not_found'), 'noop')])
+            buttons.append([Button.inline(t('common.close'), 'close_settings')])
             return buttons
 
         # 获取所有规则（除了当前规则）
@@ -602,8 +594,8 @@ async def create_rule_selection_buttons(rule_id, page=0, callback_action="perfor
         if total_rules == 0:
             # buttons.append([Button.inline('❌ 没有可用的规则', 'noop')])
             buttons.append([
-                Button.inline('👈 返回', f"other_settings:{source_rule_id}"),
-                Button.inline('❌ 关闭', 'close_settings')
+                Button.inline(t('common.btn.back'), f"other_settings:{source_rule_id}"),
+                Button.inline(t('common.btn.close'), 'close_settings')
             ])
             return buttons
 
@@ -650,8 +642,8 @@ async def create_rule_selection_buttons(rule_id, page=0, callback_action="perfor
             buttons.append(page_buttons)
 
         buttons.append([
-            Button.inline('👈 返回', f"other_settings:{source_rule_id}"),
-            Button.inline('❌ 关闭', 'close_settings')
+            Button.inline(t('common.btn.back'), f"other_settings:{source_rule_id}"),
+            Button.inline(t('common.btn.close'), 'close_settings')
         ])
 
     finally:
@@ -671,14 +663,14 @@ async def parse_rule_ids(event, rule_id_data):
     """
     parts = rule_id_data.split(':')
     if len(parts) != 2:
-        await event.answer("数据格式错误")
+        await event.answer(t('common.alert.bad_data_format'))
         return None, None
 
     source_rule_id = int(parts[0])
     target_rule_id = int(parts[1])
 
     if source_rule_id == target_rule_id:
-        await event.answer('不能复制到自身')
+        await event.answer(t('other.alert.cannot_copy_to_self'))
         return None, None
 
     return source_rule_id, target_rule_id
@@ -699,7 +691,7 @@ async def get_rules(event, session, source_rule_id, target_rule_id):
     target_rule = session.query(ForwardRule).get(target_rule_id)
 
     if not source_rule or not target_rule:
-        await event.answer("源规则或目标规则不存在")
+        await event.answer(t('other.alert.src_or_target_not_exist'))
         return None, None
 
     return source_rule, target_rule
@@ -715,8 +707,8 @@ async def send_result_message(event, message, result_message, target_rule_id):
     """
     # 创建返回设置按钮
     buttons = [[
-        Button.inline('👈 返回设置', f"other_settings:{target_rule_id}"),
-        Button.inline('❌ 关闭', 'close_settings')
+        Button.inline(t('common.btn.back_settings'), f"other_settings:{target_rule_id}"),
+        Button.inline(t('common.btn.close'), 'close_settings')
     ]]
 
     # 删除原消息
@@ -743,7 +735,7 @@ async def callback_clear_keyword(event, rule_id, session, message, data):
         # 获取规则信息
         current_rule = session.query(ForwardRule).get(int(rule_id))
         if not current_rule:
-            await event.answer("规则不存在")
+            await event.answer(t('common.alert.rule_not_found'))
             return
 
         # 创建按钮列表，首先添加当前规则
@@ -752,7 +744,7 @@ async def callback_clear_keyword(event, rule_id, session, message, data):
         target_chat = current_rule.target_chat
 
         # 当前规则按钮
-        current_button_text = f"🗑️ 清空当前规则"
+        current_button_text = t('other.btn.clear_current')
         current_callback_data = f"perform_clear_keyword:{current_rule.id}"
         buttons.append([Button.inline(current_button_text, current_callback_data)])
 
@@ -773,15 +765,15 @@ async def callback_clear_keyword(event, rule_id, session, message, data):
         else:
             # 添加返回和关闭按钮
             buttons.append([
-                Button.inline('👈 返回', f"other_settings:{current_rule.id}"),
-                Button.inline('❌ 关闭', 'close_settings')
+                Button.inline(t('common.btn.back'), f"other_settings:{current_rule.id}"),
+                Button.inline(t('common.btn.close'), 'close_settings')
             ])
 
-        await event.edit("请选择要清空关键字的规则：", buttons=buttons)
+        await event.edit(t('other.select_clear_keyword_rule'), buttons=buttons)
     except Exception as e:
         logger.error(f"显示清空关键字选择界面时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer("显示清空关键字界面失败")
+        await event.answer(t('other.alert.show_clear_keyword_failed'))
     return
 
 async def callback_clear_replace(event, rule_id, session, message, data):
@@ -796,7 +788,7 @@ async def callback_clear_replace(event, rule_id, session, message, data):
         # 获取规则信息
         current_rule = session.query(ForwardRule).get(int(rule_id))
         if not current_rule:
-            await event.answer("规则不存在")
+            await event.answer(t('common.alert.rule_not_found'))
             return
 
         # 创建按钮列表，首先添加当前规则
@@ -805,7 +797,7 @@ async def callback_clear_replace(event, rule_id, session, message, data):
         target_chat = current_rule.target_chat
 
         # 当前规则按钮
-        current_button_text = f"🗑️ 清空当前规则"
+        current_button_text = t('other.btn.clear_current')
         current_callback_data = f"perform_clear_replace:{current_rule.id}"
         buttons.append([Button.inline(current_button_text, current_callback_data)])
 
@@ -826,15 +818,15 @@ async def callback_clear_replace(event, rule_id, session, message, data):
         else:
             # 添加返回和关闭按钮
             buttons.append([
-                Button.inline('👈 返回', f"other_settings:{current_rule.id}"),
-                Button.inline('❌ 关闭', 'close_settings')
+                Button.inline(t('common.btn.back'), f"other_settings:{current_rule.id}"),
+                Button.inline(t('common.btn.close'), 'close_settings')
             ])
 
-        await event.edit("请选择要清空替换规则的规则：", buttons=buttons)
+        await event.edit(t('other.select_clear_replace_rule'), buttons=buttons)
     except Exception as e:
         logger.error(f"显示清空替换规则选择界面时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer("显示清空替换规则界面失败")
+        await event.answer(t('other.alert.show_clear_replace_failed'))
     return
 
 async def callback_delete_rule(event, rule_id, session, message, data):
@@ -853,7 +845,7 @@ async def callback_delete_rule(event, rule_id, session, message, data):
         # 获取规则信息
         current_rule = session.query(ForwardRule).get(int(source_rule_id))
         if not current_rule:
-            await event.answer("规则不存在")
+            await event.answer(t('common.alert.rule_not_found'))
             return
 
         # 创建按钮列表，首先添加当前规则
@@ -862,7 +854,7 @@ async def callback_delete_rule(event, rule_id, session, message, data):
         target_chat = current_rule.target_chat
 
         # 当前规则按钮
-        current_button_text = f"❌ 删除当前规则"
+        current_button_text = t('other.btn.delete_current')
         current_callback_data = f"perform_delete_rule:{current_rule.id}"
         buttons.append([Button.inline(current_button_text, current_callback_data)])
 
@@ -883,15 +875,15 @@ async def callback_delete_rule(event, rule_id, session, message, data):
         else:
             # 添加返回和关闭按钮
             buttons.append([
-                Button.inline('👈 返回', f"other_settings:{current_rule.id}"),
-                Button.inline('❌ 关闭', 'close_settings')
+                Button.inline(t('common.btn.back'), f"other_settings:{current_rule.id}"),
+                Button.inline(t('common.btn.close'), 'close_settings')
             ])
 
-        await event.edit("请选择要删除的规则：", buttons=buttons)
+        await event.edit(t('other.select_delete_rule'), buttons=buttons)
     except Exception as e:
         logger.error(f"显示删除规则选择界面时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer("显示删除规则界面失败")
+        await event.answer(t('other.alert.show_delete_rule_failed'))
     return
 
 # 执行清空关键字的回调
@@ -914,7 +906,7 @@ async def callback_perform_clear_keyword(event, rule_id_data, session, message, 
         # 获取规则
         rule = session.query(ForwardRule).get(rule_id)
         if not rule:
-            await event.answer("规则不存在")
+            await event.answer(t('common.alert.rule_not_found'))
             return
 
         # 获取并删除所有关键字
@@ -925,7 +917,7 @@ async def callback_perform_clear_keyword(event, rule_id_data, session, message, 
         session.commit()
 
         # 构建消息内容
-        result_message = f"✅ 已清空规则 `{rule.id}` 的所有关键字，共删除 {keyword_count} 个关键字"
+        result_message = t('other.cleared_keywords', rule_id=rule.id, count=keyword_count)
 
         # 返回按钮指向源规则的设置页面（如果有的话）
         source_id = int(rule_id_data.split(':')[0]) if ':' in rule_id_data else rule.id
@@ -933,8 +925,8 @@ async def callback_perform_clear_keyword(event, rule_id_data, session, message, 
         # 发送结果消息
         # 创建返回设置按钮
         buttons = [[
-            Button.inline('👈 返回设置', f"other_settings:{source_id}"),
-            Button.inline('❌ 关闭', 'close_settings')
+            Button.inline(t('common.btn.back_settings'), f"other_settings:{source_id}"),
+            Button.inline(t('common.btn.close'), 'close_settings')
         ]]
 
         # 删除原消息
@@ -949,12 +941,12 @@ async def callback_perform_clear_keyword(event, rule_id_data, session, message, 
             parse_mode='markdown'
         )
 
-        await event.answer(f"已清空规则 {rule.id} 的所有关键字")
+        await event.answer(t('other.alert.cleared_keywords', rule_id=rule.id))
 
     except Exception as e:
         logger.error(f"清空关键字时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer(f"清空关键字失败: {str(e)}")
+        await event.answer(t('other.alert.clear_keyword_failed', error=str(e)))
     return
 
 # 执行清空替换规则的回调
@@ -977,7 +969,7 @@ async def callback_perform_clear_replace(event, rule_id_data, session, message, 
         # 获取规则
         rule = session.query(ForwardRule).get(rule_id)
         if not rule:
-            await event.answer("规则不存在")
+            await event.answer(t('common.alert.rule_not_found'))
             return
 
         # 获取并删除所有替换规则
@@ -988,7 +980,7 @@ async def callback_perform_clear_replace(event, rule_id_data, session, message, 
         session.commit()
 
         # 构建消息内容
-        result_message = f"✅ 已清空规则 `{rule.id}` 的所有替换规则，共删除 {replace_count} 个替换规则"
+        result_message = t('other.cleared_replace', rule_id=rule.id, count=replace_count)
 
         # 返回按钮指向源规则的设置页面（如果有的话）
         source_id = int(rule_id_data.split(':')[0]) if ':' in rule_id_data else rule.id
@@ -996,8 +988,8 @@ async def callback_perform_clear_replace(event, rule_id_data, session, message, 
         # 发送结果消息
         # 创建返回设置按钮
         buttons = [[
-            Button.inline('👈 返回设置', f"other_settings:{source_id}"),
-            Button.inline('❌ 关闭', 'close_settings')
+            Button.inline(t('common.btn.back_settings'), f"other_settings:{source_id}"),
+            Button.inline(t('common.btn.close'), 'close_settings')
         ]]
 
         # 删除原消息
@@ -1012,12 +1004,12 @@ async def callback_perform_clear_replace(event, rule_id_data, session, message, 
             parse_mode='markdown'
         )
 
-        await event.answer(f"已清空规则 {rule.id} 的所有替换规则")
+        await event.answer(t('other.alert.cleared_replace', rule_id=rule.id))
 
     except Exception as e:
         logger.error(f"清空替换规则时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer(f"清空替换规则失败: {str(e)}")
+        await event.answer(t('other.alert.clear_replace_failed', error=str(e)))
     return
 
 # 执行删除规则的回调
@@ -1044,7 +1036,7 @@ async def callback_perform_delete_rule(event, rule_id_data, session, message, da
         # 获取规则
         rule = session.query(ForwardRule).get(rule_id)
         if not rule:
-            await event.answer("规则不存在")
+            await event.answer(t('common.alert.rule_not_found'))
             return
 
         # 先保存规则对象，用于后续检查聊天关联
@@ -1099,7 +1091,7 @@ async def callback_perform_delete_rule(event, rule_id_data, session, message, da
             logger.info(f"删除规则后清理了 {deleted_chats} 个未使用的聊天记录")
 
         # 构建消息内容
-        result_message = f"✅ 已删除规则 `{rule.id}`"
+        result_message = t('other.deleted_rule', rule_id=rule.id)
 
         # 删除原消息
         await message.delete()
@@ -1111,12 +1103,12 @@ async def callback_perform_delete_rule(event, rule_id_data, session, message, da
         if source_id and source_id != rule.id:
             # 如果是从另一个规则删除的，提供返回原规则的按钮
             buttons = [[
-                Button.inline('👈 返回设置', f"other_settings:{source_id}"),
-                Button.inline('❌ 关闭', 'close_settings')
+                Button.inline(t('common.btn.back_settings'), f"other_settings:{source_id}"),
+                Button.inline(t('common.btn.close'), 'close_settings')
             ]]
         else:
             # 如果是删除的当前规则，只提供关闭按钮
-            buttons = [[Button.inline('❌ 关闭', 'close_settings')]]
+            buttons = [[Button.inline(t('common.btn.close'), 'close_settings')]]
 
         # 发送结果消息
         await send_message_and_delete(
@@ -1127,13 +1119,13 @@ async def callback_perform_delete_rule(event, rule_id_data, session, message, da
             parse_mode='markdown'
         )
 
-        await event.answer("规则已成功删除")
+        await event.answer(t('other.alert.rule_deleted'))
 
     except Exception as e:
         session.rollback()
         logger.error(f"删除规则时出错: {str(e)}")
         logger.error(f"错误详情: {traceback.format_exc()}")
-        await event.answer(f"删除规则失败: {str(e)}")
+        await event.answer(t('other.alert.delete_rule_failed', error=str(e)))
     return
 
 async def callback_set_userinfo_template(event, rule_id, session, message, data):
@@ -1142,14 +1134,14 @@ async def callback_set_userinfo_template(event, rule_id, session, message, data)
 
     rule = session.query(ForwardRule).get(rule_id)
     if not rule:
-        await event.answer('规则不存在')
+        await event.answer(t('common.alert.rule_not_found'))
         return
 
     # 检查是否频道消息
     if isinstance(event.chat, types.Channel):
         # 检查是否是管理员
         if not await is_admin(event):
-            await event.answer('只有管理员可以修改设置')
+            await event.answer(t('common.alert.admin_only'))
             return
         user_id = os.getenv('USER_ID')
     else:
@@ -1169,22 +1161,13 @@ async def callback_set_userinfo_template(event, rule_id, session, message, data)
         logger.exception(e)
 
     try:
-        current_template = rule.userinfo_template if hasattr(rule, 'userinfo_template') and rule.userinfo_template else '未设置'
+        current_template = rule.userinfo_template if hasattr(rule, 'userinfo_template') and rule.userinfo_template else t('common.not_set')
 
-        help_text = (
-            "用户信息模板用于在转发消息中添加用户信息。\n"
-            "可用变量：\n"
-            "{name} - 用户名\n"
-            "{id} - 用户ID\n"
-        )
+        help_text = t('other.userinfo_template.help')
 
         await message.edit(
-            f"请发送新的用户信息模板\n"
-            f"当前规则ID: `{rule_id}`\n"
-            f"当前用户信息模板：\n\n`{current_template}`\n\n"
-            f"{help_text}\n"
-            f"5分钟内未设置将自动取消",
-            buttons=[[Button.inline("取消", f"cancel_set_userinfo:{rule_id}")]]
+            t('other.userinfo_template.text', rule_id=rule_id, current_template=current_template, help_text=help_text),
+            buttons=[[Button.inline(t('common.btn.cancel'), f"cancel_set_userinfo:{rule_id}")]]
         )
         logger.info("消息编辑成功")
     except Exception as e:
@@ -1198,14 +1181,14 @@ async def callback_set_time_template(event, rule_id, session, message, data):
 
     rule = session.query(ForwardRule).get(rule_id)
     if not rule:
-        await event.answer('规则不存在')
+        await event.answer(t('common.alert.rule_not_found'))
         return
 
     # 检查是否频道消息
     if isinstance(event.chat, types.Channel):
         # 检查是否是管理员
         if not await is_admin(event):
-            await event.answer('只有管理员可以修改设置')
+            await event.answer(t('common.alert.admin_only'))
             return
         user_id = os.getenv('USER_ID')
     else:
@@ -1225,21 +1208,13 @@ async def callback_set_time_template(event, rule_id, session, message, data):
         logger.exception(e)
 
     try:
-        current_template = rule.time_template if hasattr(rule, 'time_template') and rule.time_template else '未设置'
+        current_template = rule.time_template if hasattr(rule, 'time_template') and rule.time_template else t('common.not_set')
 
-        help_text = (
-            "时间模板用于在转发消息中添加时间信息。\n"
-            "可用变量:\n"
-            "{time} - 当前时间\n"
-        )
+        help_text = t('other.time_template.help')
 
         await message.edit(
-            f"请发送新的时间模板\n"
-            f"当前规则ID: `{rule_id}`\n"
-            f"当前时间模板：\n\n`{current_template}`\n\n"
-            f"{help_text}\n"
-            f"5分钟内未设置将自动取消",
-            buttons=[[Button.inline("取消", f"cancel_set_time:{rule_id}")]]
+            t('other.time_template.text', rule_id=rule_id, current_template=current_template, help_text=help_text),
+            buttons=[[Button.inline(t('common.btn.cancel'), f"cancel_set_time:{rule_id}")]]
         )
         logger.info("消息编辑成功")
     except Exception as e:
@@ -1264,8 +1239,8 @@ async def callback_cancel_set_userinfo(event, rule_id, session, message, data):
             # 清除状态
             state_manager.clear_state(event.sender_id, abs(event.chat_id))
             # 返回到其他设置页面
-            await event.edit("其他设置：", buttons=await create_other_settings_buttons(rule_id=rule_id))
-            await event.answer("已取消设置")
+            await event.edit(t('menu.other.header'), buttons=await create_other_settings_buttons(rule_id=rule_id))
+            await event.answer(t('common.alert.cancelled'))
     finally:
         session.close()
     return
@@ -1279,8 +1254,8 @@ async def callback_cancel_set_time(event, rule_id, session, message, data):
             # 清除状态
             state_manager.clear_state(event.sender_id, abs(event.chat_id))
             # 返回到其他设置页面
-            await event.edit("其他设置：", buttons=await create_other_settings_buttons(rule_id=rule_id))
-            await event.answer("已取消设置")
+            await event.edit(t('menu.other.header'), buttons=await create_other_settings_buttons(rule_id=rule_id))
+            await event.answer(t('common.alert.cancelled'))
     finally:
         session.close()
     return
@@ -1291,14 +1266,14 @@ async def callback_set_original_link_template(event, rule_id, session, message, 
 
     rule = session.query(ForwardRule).get(rule_id)
     if not rule:
-        await event.answer('规则不存在')
+        await event.answer(t('common.alert.rule_not_found'))
         return
 
     # 检查是否频道消息
     if isinstance(event.chat, types.Channel):
         # 检查是否是管理员
         if not await is_admin(event):
-            await event.answer('只有管理员可以修改设置')
+            await event.answer(t('common.alert.admin_only'))
             return
         user_id = os.getenv('USER_ID')
     else:
@@ -1318,21 +1293,13 @@ async def callback_set_original_link_template(event, rule_id, session, message, 
         logger.exception(e)
 
     try:
-        current_template = rule.original_link_template if hasattr(rule, 'original_link_template') and rule.original_link_template else '未设置'
+        current_template = rule.original_link_template if hasattr(rule, 'original_link_template') and rule.original_link_template else t('common.not_set')
 
-        help_text = (
-            "原始链接模板用于在转发消息中添加原始链接。\n"
-            "可用变量:\n"
-            "{original_link} - 完整的原始链接\n"
-        )
+        help_text = t('other.link_template.help')
 
         await message.edit(
-            f"请发送新的原始链接模板\n"
-            f"当前规则ID: `{rule_id}`\n"
-            f"当前原始链接模板：\n\n`{current_template}`\n\n"
-            f"{help_text}\n"
-            f"5分钟内未设置将自动取消",
-            buttons=[[Button.inline("取消", f"cancel_set_link:{rule_id}")]]
+            t('other.link_template.text', rule_id=rule_id, current_template=current_template, help_text=help_text),
+            buttons=[[Button.inline(t('common.btn.cancel'), f"cancel_set_link:{rule_id}")]]
         )
         logger.info("消息编辑成功")
     except Exception as e:
@@ -1349,8 +1316,8 @@ async def callback_cancel_set_original_link(event, rule_id, session, message, da
             # 清除状态
             state_manager.clear_state(event.sender_id, abs(event.chat_id))
             # 返回到其他设置页面
-            await event.edit("其他设置：", buttons=await create_other_settings_buttons(rule_id=rule_id))
-            await event.answer("已取消设置")
+            await event.edit(t('menu.other.header'), buttons=await create_other_settings_buttons(rule_id=rule_id))
+            await event.answer(t('common.alert.cancelled'))
     finally:
         session.close()
     return
@@ -1362,14 +1329,14 @@ async def callback_toggle_reverse_blacklist(event, rule_id, session, message, da
         if rule:
             rule.enable_reverse_blacklist = not rule.enable_reverse_blacklist
             session.commit()
-            await event.answer("设置已更新")
+            await event.answer(t('common.alert.setting_updated'))
 
             await event.edit(
                 buttons=await create_other_settings_buttons(rule_id=rule_id)
             )
     except Exception as e:
         logger.error(f"切换反转黑名单设置时出错: {str(e)}")
-        await event.answer("更新设置失败")
+        await event.answer(t('common.alert.update_failed_plain'))
     return
 
 async def callback_toggle_reverse_whitelist(event, rule_id, session, message, data):
@@ -1379,12 +1346,12 @@ async def callback_toggle_reverse_whitelist(event, rule_id, session, message, da
         if rule:
             rule.enable_reverse_whitelist = not rule.enable_reverse_whitelist
             session.commit()
-            await event.answer("设置已更新")
+            await event.answer(t('common.alert.setting_updated'))
 
             await event.edit(
                 buttons=await create_other_settings_buttons(rule_id=rule_id)
             )
     except Exception as e:
         logger.error(f"切换反转白名单设置时出错: {str(e)}")
-        await event.answer("更新设置失败")
+        await event.answer(t('common.alert.update_failed_plain'))
     return

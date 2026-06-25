@@ -6,6 +6,7 @@ from utils.common import get_db_ops
 from models.models import get_session
 from sqlalchemy import text
 from models.models import ForwardRule
+from utils.i18n import t
 
 SUMMARY_TIMES = load_summary_times()
 AI_MODELS= load_ai_models()
@@ -44,8 +45,8 @@ async def create_ai_settings_buttons(rule=None,rule_id=None):
 
     # 添加返回按钮
     buttons.append([
-        Button.inline('👈 返回', f"rule_settings:{rule.id}"),
-        Button.inline('❌ 关闭', "close_settings")
+        Button.inline(t('common.btn.back'), f"rule_settings:{rule.id}"),
+        Button.inline(t('common.btn.close'), "close_settings")
     ])
     
     return buttons
@@ -87,8 +88,8 @@ async def create_media_settings_buttons(rule=None,rule_id=None):
     
     # 添加返回按钮
     buttons.append([
-        Button.inline('👈 返回', f"rule_settings:{rule.id}"),
-        Button.inline('❌ 关闭', "close_settings")
+        Button.inline(t('common.btn.back'), f"rule_settings:{rule.id}"),
+        Button.inline(t('common.btn.close'), "close_settings")
     ])
 
     return buttons
@@ -127,8 +128,8 @@ async def create_other_settings_buttons(rule=None,rule_id=None):
 
     # 添加返回按钮
     buttons.append([
-        Button.inline('👈 返回', f"rule_settings:{rule_id}"),
-        Button.inline('❌ 关闭', "close_settings")
+        Button.inline(t('common.btn.back'), f"rule_settings:{rule_id}"),
+        Button.inline(t('common.btn.close'), "close_settings")
     ])
 
     return buttons
@@ -142,7 +143,7 @@ async def create_list_buttons(total_pages, current_page, command):
     # 上一页按钮
     if current_page > 1:
         row.append(Button.inline(
-            '⬅️ 上一页',
+            t('common.page.prev'),
             f'page:{current_page-1}:{command}'
         ))
 
@@ -155,7 +156,7 @@ async def create_list_buttons(total_pages, current_page, command):
     # 下一页按钮
     if current_page < total_pages:
         row.append(Button.inline(
-            '下一页 ➡️',
+            t('common.page.next'),
             f'page:{current_page+1}:{command}'
         ))
 
@@ -188,16 +189,16 @@ async def create_model_buttons(rule_id, page=0):
     # 添加导航按钮
     nav_buttons = []
     if page > 0:  # 不是第一页，显示"上一页"
-        nav_buttons.append(Button.inline("⬅️ 上一页", f"model_page:{rule_id}:{page - 1}"))
+        nav_buttons.append(Button.inline(t('common.page.prev'), f"model_page:{rule_id}:{page - 1}"))
     # 添加页码显示在中间
     nav_buttons.append(Button.inline(f"{page + 1}/{total_pages}", f"noop:{rule_id}"))
     if page < total_pages - 1:  # 不是最后一页，显示"下一页"
-        nav_buttons.append(Button.inline("下一页 ➡️", f"model_page:{rule_id}:{page + 1}"))
+        nav_buttons.append(Button.inline(t('common.page.next'), f"model_page:{rule_id}:{page + 1}"))
     if nav_buttons:
         buttons.append(nav_buttons)
 
     # 添加返回按钮
-    buttons.append([Button.inline("返回", f"rule_settings:{rule_id}")])
+    buttons.append([Button.inline(t('common.back'), f"rule_settings:{rule_id}")])
 
     return buttons
 
@@ -239,7 +240,7 @@ async def create_summary_time_buttons(rule_id, page=0):
     nav_buttons = []
     if page > 0:
         nav_buttons.append(Button.inline(
-            "⬅️ 上一页",
+            t('common.page.prev'),
             f"time_page:{rule_id}:{page - 1}"
         ))
 
@@ -250,14 +251,14 @@ async def create_summary_time_buttons(rule_id, page=0):
 
     if end_idx < total_times:
         nav_buttons.append(Button.inline(
-            "下一页 ➡️",
+            t('common.page.next'),
             f"time_page:{rule_id}:{page + 1}"
         ))
 
     buttons.append(nav_buttons)
     buttons.append([
-            Button.inline('👈 返回', f"ai_settings:{rule_id}"),
-            Button.inline('❌ 关闭', "close_settings")
+            Button.inline(t('common.btn.back'), f"ai_settings:{rule_id}"),
+            Button.inline(t('common.btn.close'), "close_settings")
         ])
 
     return buttons
@@ -300,7 +301,7 @@ async def create_media_size_buttons(rule_id, page=0):
     nav_buttons = []
     if page > 0:
         nav_buttons.append(Button.inline(
-            "⬅️ 上一页",
+            t('common.page.prev'),
             f"media_size_page:{rule_id}:{page - 1}"
         ))
 
@@ -311,15 +312,15 @@ async def create_media_size_buttons(rule_id, page=0):
 
     if end_idx < total_size:
         nav_buttons.append(Button.inline(
-            "下一页 ➡️",
+            t('common.page.next'),
             f"media_size_page:{rule_id}:{page + 1}"
         ))
 
     buttons.append(nav_buttons)
 
     buttons.append([
-            Button.inline('👈 返回', f"rule_settings:{rule_id}"),
-            Button.inline('❌ 关闭', "close_settings")
+            Button.inline(t('common.btn.back'), f"rule_settings:{rule_id}"),
+            Button.inline(t('common.btn.close'), "close_settings")
         ])
 
     return buttons
@@ -362,7 +363,7 @@ async def create_delay_time_buttons(rule_id, page=0):
     nav_buttons = []
     if page > 0:
         nav_buttons.append(Button.inline(
-            "⬅️ 上一页",
+            t('common.page.prev'),
             f"delay_time_page:{rule_id}:{page - 1}"
         ))
 
@@ -373,15 +374,15 @@ async def create_delay_time_buttons(rule_id, page=0):
 
     if end_idx < total_times:
         nav_buttons.append(Button.inline(
-            "下一页 ➡️",
+            t('common.page.next'),
             f"delay_time_page:{rule_id}:{page + 1}"
         ))
 
     buttons.append(nav_buttons)
 
     buttons.append([
-            Button.inline('👈 返回', f"rule_settings:{rule_id}"),
-            Button.inline('❌ 关闭', "close_settings")
+            Button.inline(t('common.btn.back'), f"rule_settings:{rule_id}"),
+            Button.inline(t('common.btn.close'), "close_settings")
         ])
 
     return buttons
@@ -400,11 +401,11 @@ async def create_media_types_buttons(rule_id, media_types):
     
     # 媒体类型按钮
     media_type_names = {
-        'photo': '📷 图片',
-        'document': '📄 文档',
-        'video': '🎬 视频',
-        'audio': '🎵 音频',
-        'voice': '🎤 语音'
+        'photo': t('media.type.photo'),
+        'document': t('media.type.document'),
+        'video': t('media.type.video'),
+        'audio': t('media.type.audio'),
+        'voice': t('media.type.voice')
     }
     
     for field, display_name in media_type_names.items():
@@ -416,8 +417,8 @@ async def create_media_types_buttons(rule_id, media_types):
         buttons.append([Button.inline(button_text, callback_data)])
     
     buttons.append([
-            Button.inline('👈 返回', f"media_settings:{rule_id}"),
-            Button.inline('❌ 关闭', "close_settings")
+            Button.inline(t('common.btn.back'), f"media_settings:{rule_id}"),
+            Button.inline(t('common.btn.close'), "close_settings")
         ])
     
     return buttons
@@ -500,8 +501,8 @@ async def create_media_extensions_buttons(rule_id, page=0):
         
 
         buttons.append([
-            Button.inline('👈 返回', f"media_settings:{rule_id}"),
-            Button.inline('❌ 关闭', "close_settings")
+            Button.inline(t('common.btn.back'), f"media_settings:{rule_id}"),
+            Button.inline(t('common.btn.close'), "close_settings")
         ])
     finally:
         session.close()
@@ -528,8 +529,8 @@ async def create_sync_rule_buttons(rule_id, page=0):
         # 获取当前规则
         current_rule = session.query(ForwardRule).get(rule_id)
         if not current_rule:
-            buttons.append([Button.inline('❌ 规则不存在', 'noop')])
-            buttons.append([Button.inline('关闭', 'close_settings')])
+            buttons.append([Button.inline(t('common.rule_not_found'), 'noop')])
+            buttons.append([Button.inline(t('common.close'), 'close_settings')])
             return buttons
         
         # 获取所有规则（除了当前规则）
@@ -542,10 +543,10 @@ async def create_sync_rule_buttons(rule_id, page=0):
         total_pages = (total_rules + RULES_PER_PAGE - 1) // RULES_PER_PAGE
         
         if total_rules == 0:
-            buttons.append([Button.inline('❌ 没有可用的规则', 'noop')])
+            buttons.append([Button.inline(t('settings.sync.no_rules'), 'noop')])
             buttons.append([
-                Button.inline('👈 返回', f"rule_settings:{rule_id}"),
-                Button.inline('❌ 关闭', 'close_settings')
+                Button.inline(t('common.btn.back'), f"rule_settings:{rule_id}"),
+                Button.inline(t('common.btn.close'), 'close_settings')
             ])
             return buttons
         
@@ -600,8 +601,8 @@ async def create_sync_rule_buttons(rule_id, page=0):
         
         # 添加同步保存和返回按钮
         buttons.append([
-            Button.inline('👈 返回', f"rule_settings:{rule_id}"),
-            Button.inline('❌ 关闭', 'close_settings')
+            Button.inline(t('common.btn.back'), f"rule_settings:{rule_id}"),
+            Button.inline(t('common.btn.close'), 'close_settings')
         ])
     
     finally:
@@ -629,8 +630,8 @@ async def create_push_settings_buttons(rule_id, page=0):
         # 获取规则对象
         rule = session.query(ForwardRule).get(rule_id)
         if not rule:
-            buttons.append([Button.inline("❌ 规则不存在", "noop")])
-            buttons.append([Button.inline("关闭", "close_settings")])
+            buttons.append([Button.inline(t('common.rule_not_found'), "noop")])
+            buttons.append([Button.inline(t('common.close'), "close_settings")])
             return buttons
         
         
@@ -703,8 +704,8 @@ async def create_push_settings_buttons(rule_id, page=0):
     
     # 添加返回和关闭按钮
     buttons.append([
-        Button.inline('👈 返回', f"rule_settings:{rule_id}"),
-        Button.inline('❌ 关闭', "close_settings")
+        Button.inline(t('common.btn.back'), f"rule_settings:{rule_id}"),
+        Button.inline(t('common.btn.close'), "close_settings")
     ])
     
     return buttons
@@ -728,36 +729,36 @@ async def create_push_config_details_buttons(config_id):
         # 获取推送配置
         config = session.query(PushConfig).get(config_id)
         if not config:
-            buttons.append([Button.inline("❌ 推送配置不存在", "noop")])
-            buttons.append([Button.inline("关闭", "close_settings")])
+            buttons.append([Button.inline(t('settings.push.config_not_found'), "noop")])
+            buttons.append([Button.inline(t('common.close'), "close_settings")])
             return buttons
         
         # 添加启用/禁用按钮
         buttons.append([
             Button.inline(
-                f"{'✅ ' if config.enable_push_channel else ''}启用推送", 
+                f"{'✅ ' if config.enable_push_channel else ''}{t('settings.push.enable_push_channel.name')}", 
                 f"toggle_push_config_status:{config_id}"
             )
         ])
         
         # 添加媒体发送方式切换按钮
-        mode_text = "单个" if config.media_send_mode == "Single" else "全部"
+        mode_text = t('settings.push.media_mode.single') if config.media_send_mode == "Single" else t('settings.push.media_mode.all')
         buttons.append([
             Button.inline(
-                f"📁 媒体发送方式: {mode_text}", 
+                f"📁 {t('settings.push.media_send_mode.name')}: {mode_text}", 
                 f"toggle_media_send_mode:{config_id}"
             )
         ])
         
         # 添加删除按钮
         buttons.append([
-            Button.inline("🗑️ 删除推送配置", f"delete_push_config:{config_id}")
+            Button.inline(t('settings.push.delete_config'), f"delete_push_config:{config_id}")
         ])
         
         # 添加返回按钮
         buttons.append([
-            Button.inline("👈 返回", f"push_settings:{config.rule_id}"),
-            Button.inline("❌ 关闭", "close_settings")
+            Button.inline(t('common.btn.back'), f"push_settings:{config.rule_id}"),
+            Button.inline(t('common.btn.close'), "close_settings")
         ])
         
     finally:

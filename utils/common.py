@@ -2,6 +2,7 @@ import importlib
 import os
 import sys
 import logging
+from utils.i18n import t
 from telethon.tl.types import ChannelParticipantsAdmins
 from ai import get_ai_provider
 from enums.enums import ForwardMode
@@ -68,7 +69,7 @@ async def get_current_rule(session, event):
 
         if not current_chat_db or not current_chat_db.current_add_id:
             logger.info('未找到当前聊天或未选择源聊天')
-            await reply_and_delete(event,'请先使用 /switch 选择一个源聊天')
+            await reply_and_delete(event,t('common.no_source_selected'))
             return None
 
         logger.info(f'当前选中的源聊天ID: {current_chat_db.current_add_id}')
@@ -91,7 +92,7 @@ async def get_current_rule(session, event):
 
         if not rule:
             logger.info('未找到对应的转发规则')
-            await reply_and_delete(event,'转发规则不存在')
+            await reply_and_delete(event,t('common.forward_rule_not_found'))
             return None
 
         logger.info(f'找到转发规则 ID: {rule.id}')
@@ -99,7 +100,7 @@ async def get_current_rule(session, event):
     except Exception as e:
         logger.error(f'获取当前规则时出错: {str(e)}')
         logger.exception(e)
-        await reply_and_delete(event,'获取当前规则时出错，请检查日志')
+        await reply_and_delete(event,t('common.get_current_rule_error'))
         return None
 
 
@@ -116,7 +117,7 @@ async def get_all_rules(session, event):
 
         if not current_chat_db:
             logger.info('未找到当前聊天')
-            await reply_and_delete(event,'当前聊天没有任何转发规则')
+            await reply_and_delete(event,t('callback.alert.no_rules_in_chat'))
             return None
 
         logger.info(f'找到当前聊天数据库记录 ID: {current_chat_db.id}')
@@ -128,7 +129,7 @@ async def get_all_rules(session, event):
 
         if not rules:
             logger.info('未找到任何转发规则')
-            await reply_and_delete(event,'当前聊天没有任何转发规则')
+            await reply_and_delete(event,t('callback.alert.no_rules_in_chat'))
             return None
 
         logger.info(f'找到 {len(rules)} 条转发规则')
@@ -136,7 +137,7 @@ async def get_all_rules(session, event):
     except Exception as e:
         logger.error(f'获取所有规则时出错: {str(e)}')
         logger.exception(e)
-        await reply_and_delete(event,'获取规则时出错，请检查日志')
+        await reply_and_delete(event,t('common.get_rules_error'))
         return None
 
 
@@ -339,7 +340,7 @@ async def check_and_clean_chats(session, rule=None):
                 if chat:
                     # 获取telegram_chat_id以便日志记录
                     telegram_chat_id = chat.telegram_chat_id
-                    name = chat.name or "未命名聊天"
+                    name = chat.name or t('common.unnamed_chat')
                     
                     # 清理所有引用此聊天作为current_add_id的记录
                     chats_using_this = session.query(Chat).filter(

@@ -8,6 +8,7 @@ from handlers.button.callback.media_callback import *
 from handlers.button.callback.other_callback import *
 from handlers.button.callback.push_callback import *
 import logging
+from utils.i18n import t
 import aiohttp
 from utils.constants import RSS_HOST, RSS_PORT
 from utils.auto_delete import respond_and_delete,reply_and_delete
@@ -26,12 +27,12 @@ async def callback_switch(event, rule_id, session, message, data):
     ).first()
 
     if not current_chat_db:
-        await event.answer('当前聊天不存在')
+        await event.answer(t('callback.alert.chat_not_exist'))
         return
 
     # 如果已经选中了这个聊天，就不做任何操作
     if current_chat_db.current_add_id == rule_id:
-        await event.answer('已经选中该聊天')
+        await event.answer(t('callback.alert.chat_already_selected'))
         return
 
     # 更新当前选中的源聊天
@@ -47,12 +48,12 @@ async def callback_switch(event, rule_id, session, message, data):
     for rule in rules:
         source_chat = rule.source_chat
         current = source_chat.telegram_chat_id == rule_id
-        button_text = f'{"✓ " if current else ""}来自: {source_chat.name}'
+        button_text = f'{"✓ " if current else ""}{t("callback.from", name=source_chat.name)}'
         callback_data = f"switch:{source_chat.telegram_chat_id}"
         buttons.append([Button.inline(button_text, callback_data)])
 
     try:
-        await message.edit('请选择要管理的转发规则:', buttons=buttons)
+        await message.edit(t('callback.select_rule_to_manage'), buttons=buttons)
     except Exception as e:
         if 'message was not modified' not in str(e).lower():
             raise  # 如果是其他错误就继续抛出
@@ -60,7 +61,7 @@ async def callback_switch(event, rule_id, session, message, data):
     source_chat = session.query(Chat).filter(
         Chat.telegram_chat_id == rule_id
     ).first()
-    await event.answer(f'已切换到: {source_chat.name if source_chat else "未知聊天"}')
+    await event.answer(t('callback.switched_to', name=source_chat.name if source_chat else t('callback.unknown_chat')))
 
 async def callback_settings(event, rule_id, session, message, data):
     """处理显示设置的回调"""
@@ -71,7 +72,7 @@ async def callback_settings(event, rule_id, session, message, data):
     ).first()
 
     if not current_chat_db:
-        await event.answer('当前聊天不存在')
+        await event.answer(t('callback.alert.chat_not_exist'))
         return
 
     rules = session.query(ForwardRule).filter(
@@ -79,7 +80,7 @@ async def callback_settings(event, rule_id, session, message, data):
     ).all()
 
     if not rules:
-        await event.answer('当前聊天没有任何转发规则')
+        await event.answer(t('callback.alert.no_rules_in_chat'))
         return
 
     # 创建规则选择按钮
@@ -90,13 +91,13 @@ async def callback_settings(event, rule_id, session, message, data):
         callback_data = f"rule_settings:{rule.id}"
         buttons.append([Button.inline(button_text, callback_data)])
 
-    await message.edit('请选择要管理的转发规则:', buttons=buttons)
+    await message.edit(t('callback.select_rule_to_manage'), buttons=buttons)
 
 async def callback_delete(event, rule_id, session, message, data):
     """处理删除规则的回调"""
     rule = session.query(ForwardRule).get(rule_id)
     if not rule:
-        await event.answer('规则不存在')
+        await event.answer(t('common.alert.rule_not_found'))
         return
 
     try:
@@ -141,14 +142,14 @@ async def callback_delete(event, rule_id, session, message, data):
         # 删除机器人的消息
         await message.delete()
         # 发送新的通知消息
-        await respond_and_delete(event,('✅ 已删除规则'))
-        await event.answer('已删除规则')
+        await respond_and_delete(event,(t('callback.rule_deleted_msg')))
+        await event.answer(t('callback.alert.rule_deleted'))
 
     except Exception as e:
         session.rollback()
         logger.error(f'删除规则时出错: {str(e)}')
         logger.exception(e)
-        await event.answer('删除规则失败，请检查日志')
+        await event.answer(t('callback.alert.delete_rule_failed'))
 
 async def callback_page(event, rule_id, session, message, data):
     """处理翻页的回调"""
@@ -166,7 +167,7 @@ async def callback_page(event, rule_id, session, message, data):
         ).first()
 
         if not current_chat_db or not current_chat_db.current_add_id:
-            await event.answer('请先选择一个源聊天')
+            await event.answer(t('callback.alert.select_source_first'))
             return
 
         source_chat = session.query(Chat).filter(
@@ -188,8 +189,8 @@ async def callback_page(event, rule_id, session, message, data):
                 event,
                 'keyword',
                 keywords,
-                lambda i, kw: f'{i}. {kw.keyword}{" (正则)" if kw.is_regex else ""}',
-                f'关键字列表\n规则: 来自 {source_chat.name}',
+                lambda i, kw: f'{i}. {kw.keyword}{t("callback.regex_suffix") if kw.is_regex else ""}',
+                t('callback.keyword_list_header', name=source_chat.name),
                 page
             )
 
@@ -203,8 +204,8 @@ async def callback_page(event, rule_id, session, message, data):
                 event,
                 'replace',
                 replace_rules,
-                lambda i, rr: f'{i}. 匹配: {rr.pattern} -> {"删除" if not rr.content else f"替换为: {rr.content}"}',
-                f'替换规则列表\n规则: 来自 {source_chat.name}',
+                lambda i, rr: f'{i}. {t("callback.match_label")}{rr.pattern} -> {t("callback.delete_label") if not rr.content else t("callback.replace_with", content=rr.content)}',
+                t('callback.replace_list_header', name=source_chat.name),
                 page
             )
 
@@ -213,7 +214,7 @@ async def callback_page(event, rule_id, session, message, data):
 
     except Exception as e:
         logger.error(f'处理翻页时出错: {str(e)}')
-        await event.answer('处理翻页时出错，请检查日志')
+        await event.answer(t('callback.alert.paging_error'))
 
 
 
@@ -221,7 +222,7 @@ async def callback_rule_settings(event, rule_id, session, message, data):
     """处理规则设置的回调"""
     rule = session.query(ForwardRule).get(rule_id)
     if not rule:
-        await event.answer('规则不存在')
+        await event.answer(t('common.alert.rule_not_found'))
         return
 
     await message.edit(
@@ -233,7 +234,7 @@ async def callback_toggle_current(event, rule_id, session, message, data):
     """处理切换当前规则的回调"""
     rule = session.query(ForwardRule).get(rule_id)
     if not rule:
-        await event.answer('规则不存在')
+        await event.answer(t('common.alert.rule_not_found'))
         return
 
     target_chat = rule.target_chat
@@ -241,7 +242,7 @@ async def callback_toggle_current(event, rule_id, session, message, data):
 
     # 检查是否已经是当前选中的规则
     if target_chat.current_add_id == source_chat.telegram_chat_id:
-        await event.answer('已经是当前选中的规则')
+        await event.answer(t('callback.alert.already_current_rule'))
         return
 
     # 更新当前选中的源聊天
@@ -258,12 +259,12 @@ async def callback_toggle_current(event, rule_id, session, message, data):
         if 'message was not modified' not in str(e).lower():
             raise
 
-    await event.answer(f'已切换到: {source_chat.name}')
+    await event.answer(t('callback.switched_to', name=source_chat.name))
 
 
 
 async def callback_set_delay_time(event, rule_id, session, message, data):
-    await event.edit("请选择延迟时间：", buttons=await create_delay_time_buttons(rule_id, page=0))
+    await event.edit(t('callback.select_delay_time'), buttons=await create_delay_time_buttons(rule_id, page=0))
     return
 
 
@@ -271,7 +272,7 @@ async def callback_set_delay_time(event, rule_id, session, message, data):
 async def callback_delay_time_page(event, rule_id, session, message, data):
     _, rule_id, page = data.split(':')
     page = int(page)
-    await event.edit("请选择延迟时间：", buttons=await create_delay_time_buttons(rule_id, page=page))
+    await event.edit(t('callback.select_delay_time'), buttons=await create_delay_time_buttons(rule_id, page=page))
     return
 
             
@@ -313,13 +314,13 @@ async def callback_set_sync_rule(event, rule_id, session, message, data):
     try:
         rule = session.query(ForwardRule).get(int(rule_id))
         if not rule:
-            await event.answer('规则不存在')
+            await event.answer(t('common.alert.rule_not_found'))
             return
         
-        await message.edit("请选择要同步到的规则：", buttons=await create_sync_rule_buttons(rule_id, page=0))
+        await message.edit(t('callback.select_sync_target'), buttons=await create_sync_rule_buttons(rule_id, page=0))
     except Exception as e:
         logger.error(f"设置同步规则时出错: {str(e)}")
-        await event.answer('处理请求时出错，请检查日志')
+        await event.answer(t('common.alert.request_error'))
     return
 
 async def callback_toggle_rule_sync(event, rule_id_data, session, message, data):
@@ -328,7 +329,7 @@ async def callback_toggle_rule_sync(event, rule_id_data, session, message, data)
         # 解析回调数据 - 格式为 source_rule_id:target_rule_id:page
         parts = rule_id_data.split(":")
         if len(parts) != 3:
-            await event.answer('回调数据格式错误')
+            await event.answer(t('common.alert.bad_callback_data'))
             return
         
         source_rule_id = int(parts[0])
@@ -347,23 +348,23 @@ async def callback_toggle_rule_sync(event, rule_id_data, session, message, data)
             # 如果已同步，则删除同步关系
             success, message_text = await db_ops.delete_rule_sync(session, source_rule_id, target_rule_id)
             if success:
-                await event.answer(f'已取消同步规则 {target_rule_id}')
+                await event.answer(t('callback.sync_cancelled', rule_id=target_rule_id))
             else:
-                await event.answer(f'取消同步失败: {message_text}')
+                await event.answer(t('callback.sync_cancel_failed', msg=message_text))
         else:
             # 如果未同步，则添加同步关系
             success, message_text = await db_ops.add_rule_sync(session, source_rule_id, target_rule_id)
             if success:
-                await event.answer(f'已设置同步到规则 {target_rule_id}')
+                await event.answer(t('callback.sync_set', rule_id=target_rule_id))
             else:
-                await event.answer(f'设置同步失败: {message_text}')
+                await event.answer(t('callback.sync_set_failed', msg=message_text))
         
         # 更新按钮显示
-        await message.edit("请选择要同步到的规则：", buttons=await create_sync_rule_buttons(source_rule_id, page))
+        await message.edit(t('callback.select_sync_target'), buttons=await create_sync_rule_buttons(source_rule_id, page))
         
     except Exception as e:
         logger.error(f"切换规则同步状态时出错: {str(e)}")
-        await event.answer('处理请求时出错，请检查日志')
+        await event.answer(t('common.alert.request_error'))
     return
 
 async def callback_sync_rule_page(event, rule_id_data, session, message, data):
@@ -372,7 +373,7 @@ async def callback_sync_rule_page(event, rule_id_data, session, message, data):
         # 解析回调数据 - 格式为 rule_id:page
         parts = rule_id_data.split(":")
         if len(parts) != 2:
-            await event.answer('回调数据格式错误')
+            await event.answer(t('common.alert.bad_callback_data'))
             return
         
         rule_id = int(parts[0])
@@ -381,15 +382,15 @@ async def callback_sync_rule_page(event, rule_id_data, session, message, data):
         # 检查规则是否存在
         rule = session.query(ForwardRule).get(rule_id)
         if not rule:
-            await event.answer('规则不存在')
+            await event.answer(t('common.alert.rule_not_found'))
             return
         
         # 更新按钮显示
-        await message.edit("请选择要同步到的规则：", buttons=await create_sync_rule_buttons(rule_id, page))
+        await message.edit(t('callback.select_sync_target'), buttons=await create_sync_rule_buttons(rule_id, page))
         
     except Exception as e:
         logger.error(f"处理同步规则页面翻页时出错: {str(e)}")
-        await event.answer('处理请求时出错，请检查日志')
+        await event.answer(t('common.alert.request_error'))
     return
 
 
@@ -400,11 +401,11 @@ async def callback_close_settings(event, rule_id, session, message, data):
         await message.delete()
     except Exception as e:
         logger.error(f"删除消息时出错: {str(e)}")
-        await event.answer("关闭设置失败，请检查日志")
+        await event.answer(t('callback.alert.close_failed'))
 
 async def callback_noop(event, rule_id, session, message, data):
     # 用于页码按钮，不做任何操作
-    await event.answer("当前页码")
+    await event.answer(t('callback.alert.current_page'))
     return
 
 
@@ -413,7 +414,7 @@ async def callback_page_rule(event, page_str, session, message, data):
     try:
         page = int(page_str)
         if page < 1:
-            await event.answer('已经是第一页了')
+            await event.answer(t('common.alert.first_page'))
             return
 
         per_page = 30
@@ -423,21 +424,21 @@ async def callback_page_rule(event, page_str, session, message, data):
         total_rules = session.query(ForwardRule).count()
         
         if total_rules == 0:
-            await event.answer('没有任何规则')
+            await event.answer(t('callback.alert.no_rules'))
             return
 
         # 计算总页数
         total_pages = (total_rules + per_page - 1) // per_page
 
         if page > total_pages:
-            await event.answer('已经是最后一页了')
+            await event.answer(t('common.alert.last_page'))
             return
 
         # 获取当前页的规则
         rules = session.query(ForwardRule).order_by(ForwardRule.id).offset(offset).limit(per_page).all()
             
         # 构建规则列表消息
-        message_parts = [f'📋 转发规则列表 (第{page}/{total_pages}页)：\n']
+        message_parts = [t('callback.rule_list_header', page=page, total_pages=total_pages)]
         
         for rule in rules:
             source_chat = rule.source_chat
@@ -445,8 +446,8 @@ async def callback_page_rule(event, page_str, session, message, data):
             
             rule_desc = (
                 f'<b>ID: {rule.id}</b>\n'
-                f'<blockquote>来源: {source_chat.name} ({source_chat.telegram_chat_id})\n'
-                f'目标: {target_chat.name} ({target_chat.telegram_chat_id})\n'
+                f'<blockquote>{t("callback.source_label")}{source_chat.name} ({source_chat.telegram_chat_id})\n'
+                f'{t("callback.target_label")}{target_chat.name} ({target_chat.telegram_chat_id})\n'
                 '</blockquote>'
             )
             message_parts.append(rule_desc)
@@ -456,14 +457,14 @@ async def callback_page_rule(event, page_str, session, message, data):
         nav_row = []
 
         if page > 1:
-            nav_row.append(Button.inline('⬅️ 上一页', f'page_rule:{page-1}'))
+            nav_row.append(Button.inline(t('common.page.prev'), f'page_rule:{page-1}'))
         else:
             nav_row.append(Button.inline('⬅️', 'noop'))
 
         nav_row.append(Button.inline(f'{page}/{total_pages}', 'noop'))
 
         if page < total_pages:
-            nav_row.append(Button.inline('下一页 ➡️', f'page_rule:{page+1}'))
+            nav_row.append(Button.inline(t('common.page.next'), f'page_rule:{page+1}'))
         else:
             nav_row.append(Button.inline('➡️', 'noop'))
 
@@ -474,7 +475,7 @@ async def callback_page_rule(event, page_str, session, message, data):
 
     except Exception as e:
         logger.error(f'处理规则列表分页时出错: {str(e)}')
-        await event.answer('处理分页请求时出错，请检查日志')
+        await event.answer(t('callback.alert.paging_request_error'))
 
 async def update_rule_setting(event, rule_id, session, message, field_name, config, setting_type):
     """通用的规则设置更新函数
@@ -492,7 +493,7 @@ async def update_rule_setting(event, rule_id, session, message, field_name, conf
     rule = session.query(ForwardRule).get(int(rule_id))
     if not rule:
         logger.warning(f'规则不存在: {rule_id}')
-        await event.answer('规则不存在')
+        await event.answer(t('common.alert.rule_not_found'))
         return False
 
     current_value = getattr(rule, field_name)
@@ -546,26 +547,26 @@ async def update_rule_setting(event, rule_id, session, message, field_name, conf
                 buttons=await create_buttons(rule)
             )
         elif setting_type == 'media':
-            await event.edit("媒体设置：", buttons=await create_media_settings_buttons(rule))
+            await event.edit(t('menu.media.header'), buttons=await create_media_settings_buttons(rule))
         elif setting_type == 'ai':
             await message.edit(
                 await get_ai_settings_text(rule),
                 buttons=await create_ai_settings_buttons(rule)
             )
         elif setting_type == 'other':
-            await event.edit("其他设置：", buttons=await create_other_settings_buttons(rule))
+            await event.edit(t('menu.other.header'), buttons=await create_other_settings_buttons(rule))
         elif setting_type == 'push':
             await event.edit(PUSH_SETTINGS_TEXT, buttons=await create_push_settings_buttons(rule), link_preview=False)
         display_name = config.get('display_name', field_name)
         if field_name == 'use_bot':
-            await event.answer(f'已切换到{"机器人" if new_value else "用户账号"}模式')
+            await event.answer(t('callback.switched_to_bot') if new_value else t('callback.switched_to_user'))
         else:
-            await event.answer(f'已更新{display_name}')
+            await event.answer(t('callback.updated', name=display_name))
         return True
     except Exception as e:
         session.rollback()
         logger.error(f'更新规则设置时出错: {str(e)}')
-        await event.answer('更新设置失败，请检查日志')
+        await event.answer(t('common.alert.update_failed'))
         return False
 
 
@@ -621,7 +622,7 @@ async def handle_callback(event):
     except Exception as e:
         logger.error(f'处理按钮回调时出错: {str(e)}')
         logger.error(f'错误堆栈: {traceback.format_exc()}')
-        await event.answer('处理请求时出错，请检查日志')
+        await event.answer(t('common.alert.request_error'))
 
 
 
