@@ -359,7 +359,7 @@
   "cmd.err.delete_rule_error": "Regeln konnten nicht gelöscht werden. Bitte die Protokolldatei prüfen.",
   "cmd.rss.no_users": "Im RSS-System sind keine Benutzerkonten vorhanden",
   "cmd.rss.deleted": "RSS-Benutzer gelöscht: {user}",
-  "cmd.rss.user_not_found": "Kein RSS-Benutzer mit dem Namen „{user}" gefunden",
+  "cmd.rss.user_not_found": "Kein RSS-Benutzer mit dem Namen \"{user}\" gefunden",
   "cmd.rss.multiple": "Im RSS-System gibt es mehrere Benutzer. Mit `/delete_rss_user <Benutzername>` den gewünschten Benutzer angeben:\n\n{users}",
   "cmd.rss.delete_error": "RSS-Benutzer konnte nicht gelöscht werden: {error}",
   "prompt.type.ai_summary": "KI-Zusammenfassung",

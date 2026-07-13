@@ -327,7 +327,7 @@ async def register_bot_commands(bot):
     try:
         result = await bot(SetBotCommandsRequest(
             scope=types.BotCommandScopeDefault(),
-            lang_code='',  # 空字符串表示默认语言
+            lang_code='de',
             commands=commands
         ))
         if result:
