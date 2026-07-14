@@ -42,7 +42,7 @@ async def handle_bind_command(event, client, parts):
             raise ValueError("参数不足")
     except ValueError:
         await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-        await reply_and_delete(event,t('cmd.bind.usage'))
+        await reply_and_delete(event,t('cmd.bind.usage'), parse_mode='html', link_preview=False)
         return
 
     # 检查是否是链接
@@ -320,7 +320,7 @@ async def handle_add_command(event, command, parts):
 
     if len(message_text.split(None, 1)) < 2:
         await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-        await reply_and_delete(event,t('cmd.usage.keywords', command=command))
+        await reply_and_delete(event,t('cmd.usage.keywords', command=command), parse_mode='html')
         return
 
     # 分离命令和参数部分
@@ -402,7 +402,7 @@ async def handle_replace_command(event, parts):
     message_text = event.message.text
     if len(message_text.split(None, 1)) < 2:
         await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-        await reply_and_delete(event,t('cmd.replace.usage'))
+        await reply_and_delete(event,t('cmd.replace.usage'), parse_mode='html')
         return
 
     # 直接分割参数，保持正则表达式的原始形式
@@ -541,7 +541,7 @@ async def handle_remove_command(event, command, parts):
     if command == 'remove_replace':
         if len(parts) < 2:
             await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-            await reply_and_delete(event,t('cmd.remove.usage_id', command=command))
+            await reply_and_delete(event,t('cmd.remove.usage_id', command=command), parse_mode='html')
             return
 
         try:
@@ -553,7 +553,7 @@ async def handle_remove_command(event, command, parts):
     elif command in ['remove_keyword_by_id', 'rkbi']:  # 添加按ID删除关键字的处理
         if len(parts) < 2:
             await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-            await reply_and_delete(event,t('cmd.remove.usage_id', command=command))
+            await reply_and_delete(event,t('cmd.remove.usage_id', command=command), parse_mode='html')
             return
 
         try:
@@ -566,7 +566,7 @@ async def handle_remove_command(event, command, parts):
     else:  # remove_keyword
         if len(message_text.split(None, 1)) < 2:
             await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-            await reply_and_delete(event,t('cmd.usage.keywords', command=command))
+            await reply_and_delete(event,t('cmd.usage.keywords', command=command), parse_mode='html')
             return
 
         # 分离命令和参数部分
@@ -756,7 +756,7 @@ async def handle_start_command(event):
 
     welcome_text = t("cmd.start.text", version=VERSION)
     await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-    await reply_and_delete(event,welcome_text)
+    await reply_and_delete(event,welcome_text, parse_mode='html', link_preview=False)
 
 async def handle_help_command(event, command):
     """处理帮助命令"""
@@ -765,7 +765,7 @@ async def handle_help_command(event, command):
     await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
 
     await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-    await reply_and_delete(event,help_text, parse_mode='markdown')
+    await reply_and_delete(event,help_text, parse_mode='html', link_preview=False)
 
 async def handle_export_keyword_command(event, command):
     """处理 export_keyword 命令"""
@@ -1013,7 +1013,7 @@ async def handle_ufb_bind_command(event, command):
         parts = event.message.text.split()
         if len(parts) < 2 or len(parts) > 3:
             await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-            await reply_and_delete(event,t('cmd.ufb.bind_usage'))
+            await reply_and_delete(event,t('cmd.ufb.bind_usage'), parse_mode='html')
             return
 
         domain = parts[1].strip().lower()
@@ -1194,7 +1194,7 @@ async def handle_copy_keywords_command(event, command):
     parts = event.message.text.split()
     if len(parts) != 2:
         await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-        await reply_and_delete(event,t('cmd.copy_kw.usage'))
+        await reply_and_delete(event,t('cmd.copy_kw.usage'), parse_mode='html')
         return
 
     try:
@@ -1262,7 +1262,7 @@ async def handle_copy_keywords_regex_command(event, command):
     parts = event.message.text.split()
     if len(parts) != 2:
         await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-        await reply_and_delete(event,t('cmd.copy_regex.usage'))
+        await reply_and_delete(event,t('cmd.copy_regex.usage'), parse_mode='html')
         return
 
     try:
@@ -1330,7 +1330,7 @@ async def handle_copy_replace_command(event, command):
     parts = event.message.text.split()
     if len(parts) != 2:
         await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-        await reply_and_delete(event,t('cmd.copy_replace.usage'))
+        await reply_and_delete(event,t('cmd.copy_replace.usage'), parse_mode='html')
         return
 
     try:
@@ -1398,7 +1398,7 @@ async def handle_copy_rule_command(event, command):
     # 检查参数数量
     if len(parts) not in [2, 3]:
         await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-        await reply_and_delete(event,t('cmd.copy_rule.usage'))
+        await reply_and_delete(event,t('cmd.copy_rule.usage'), parse_mode='html')
         return
 
     try:
@@ -1664,7 +1664,7 @@ async def handle_remove_all_keyword_command(event, command, parts):
 
     if len(message_text.split(None, 1)) < 2:
         await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-        await reply_and_delete(event,t('cmd.usage.keywords', command=command))
+        await reply_and_delete(event,t('cmd.usage.keywords', command=command), parse_mode='html')
         return
 
     # 分离命令和参数部分
@@ -1771,7 +1771,7 @@ async def handle_add_all_command(event, command, parts):
 
     if len(message_text.split(None, 1)) < 2:
         await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-        await reply_and_delete(event,t('cmd.usage.keywords', command=command))
+        await reply_and_delete(event,t('cmd.usage.keywords', command=command), parse_mode='html')
         return
 
     # 分离命令和参数部分
@@ -2017,7 +2017,7 @@ async def handle_delete_rule_command(event, command, parts):
     """处理 delete_rule 命令"""
     if len(parts) < 2:
         await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-        await reply_and_delete(event,t('cmd.remove.usage_id', command=command))
+        await reply_and_delete(event,t('cmd.remove.usage_id', command=command), parse_mode='html')
         return
 
     try:
