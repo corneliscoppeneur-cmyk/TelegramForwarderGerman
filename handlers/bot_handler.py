@@ -156,14 +156,24 @@ async def send_welcome_message(client):
     # Ohne angemeldetes Konto führt der Start direkt in die Anmeldung
     connected = await is_connected()
 
-    await client.send_message(
-        user_id,
-        WELCOME_TEXT if connected else t('login.needed.text'),
-        parse_mode='html',
-        link_preview=True,
-        buttons=build_main_menu(connected)
-    )
-    logger.info("已发送欢迎消息")
+    try:
+        await client.send_message(
+            user_id,
+            WELCOME_TEXT if connected else t('login.needed.text'),
+            parse_mode='html',
+            link_preview=True,
+            buttons=build_main_menu(connected)
+        )
+        logger.info("已发送欢迎消息")
+    except Exception as e:
+        # Ein Bot darf ein Gespräch nicht von sich aus beginnen: solange der
+        # Admin den Bot nicht selbst angeschrieben hat, kennt Telegram den
+        # Empfänger nicht. Das ist kein Grund, den Start abzubrechen – beim
+        # ersten /start läuft alles normal weiter.
+        logger.warning(
+            f'Willkommensnachricht an {user_id} nicht zustellbar ({type(e).__name__}). '
+            'Der Admin muss dem Bot zuerst selbst schreiben (/start).'
+        )
 
 
 
