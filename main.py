@@ -5,7 +5,6 @@ from models.models import init_db
 from dotenv import load_dotenv
 from message_listener import setup_listeners
 import os
-import sys
 import asyncio
 import logging
 from utils.i18n import t
@@ -126,8 +125,11 @@ async def start_clients():
         await user_client.connect()
         authorized = await user_client.is_user_authorized()
 
-        # Am interaktiven Terminal bleibt der bisherige Weg erhalten
-        if not authorized and phone_number and sys.stdin.isatty():
+        # Der alte Weg (Nummer und Code am Terminal) muss ausdrücklich angefordert
+        # werden. Auf stdin zu prüfen reicht nicht: docker-compose setzt tty=true,
+        # dann sähe auch ein Start im Hintergrund wie ein Terminal aus und der
+        # Prozess würde auf eine Eingabe warten, die nie kommt.
+        if not authorized and phone_number and os.getenv('TERMINAL_LOGIN', 'false').lower() == 'true':
             await user_client.start(phone=phone_number)
             authorized = await user_client.is_user_authorized()
 
