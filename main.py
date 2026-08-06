@@ -41,6 +41,7 @@ db_ops = None
 
 scheduler = None
 chat_updater = None
+user_updates_task = None
 
 
 async def init_db_ops():
@@ -93,10 +94,15 @@ async def start_account_services():
     Wird beim Start aufgerufen und noch einmal, sobald sich jemand über den
     Bot-Chat angemeldet hat. Mehrfachaufrufe sind unschädlich.
     """
-    global scheduler, chat_updater
+    global scheduler, chat_updater, user_updates_task
 
     if not await user_client.is_user_authorized():
         return False
+
+    # Update-Schleife des Kontos erst jetzt starten: ohne Anmeldung antwortet
+    # Telegram auf die erste Abfrage mit AuthKeyUnregisteredError.
+    if user_updates_task is None or user_updates_task.done():
+        user_updates_task = asyncio.create_task(user_client.run_until_disconnected())
 
     if scheduler is None:
         scheduler = SummaryScheduler(user_client, bot_client)
@@ -171,11 +177,10 @@ async def start_clients():
         # 发送欢迎消息
         await send_welcome_message(bot_client)
 
-        # 等待两个客户端都断开连接
-        await asyncio.gather(
-            user_client.run_until_disconnected(),
-            bot_client.run_until_disconnected()
-        )
+        # Der Bot hält den Prozess am Leben. Die Update-Schleife des Kontos
+        # läuft als eigene Aufgabe und startet erst nach der Anmeldung
+        # (siehe start_account_services).
+        await bot_client.run_until_disconnected()
     finally:
         # 关闭 DBOperations
         if db_ops and hasattr(db_ops, 'close'):
