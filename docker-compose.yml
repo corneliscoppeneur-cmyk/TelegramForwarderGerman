@@ -1,7 +1,7 @@
 services:
   telegram-forwarder:
-    image: heavrnl/telegramforwarder:latest
-    container_name: telegram-forwarder
+    build: .
+    container_name: telegram-forwarder-bot
     # 如果需要使用 RSS 功能，请取消以下注释
     # ports:
     #   - 9804:8000
