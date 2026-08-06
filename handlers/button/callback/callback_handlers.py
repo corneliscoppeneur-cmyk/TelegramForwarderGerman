@@ -7,6 +7,44 @@ from handlers.button.callback.ai_callback import *
 from handlers.button.callback.media_callback import *
 from handlers.button.callback.other_callback import *
 from handlers.button.callback.push_callback import *
+from handlers.button.callback.menu_callback import (
+    callback_menu_main,
+    callback_menu_rules,
+    callback_menu_help,
+    callback_rule_card,
+    callback_rule_toggle,
+    callback_rule_delete_ask,
+)
+from handlers.button.callback.wizard_callback import (
+    callback_wizard_start,
+    callback_wizard_page,
+    callback_wizard_select,
+    callback_wizard_search,
+    callback_wizard_link,
+    callback_wizard_mode,
+)
+from handlers.button.callback.keyword_callback import (
+    callback_words,
+    callback_word_add,
+    callback_word_delete,
+    callback_word_clear,
+    callback_word_clear_yes,
+    callback_word_export,
+    callback_word_import,
+    callback_replaces,
+    callback_replace_add,
+    callback_replace_add_empty,
+    callback_replace_delete,
+    callback_replace_clear,
+    callback_replace_clear_yes,
+    callback_replace_export,
+    callback_replace_import,
+)
+from handlers.button.account_login import (
+    callback_login_start,
+    callback_login_cancel,
+    callback_login_resend,
+)
 import logging
 from utils.i18n import t
 import aiohttp
@@ -628,6 +666,41 @@ async def handle_callback(event):
 
 # 回调处理器字典
 CALLBACK_HANDLERS = {
+    # Hauptmenü / Übersicht
+    'menu_main': callback_menu_main,
+    'menu_rules': callback_menu_rules,
+    'menu_help': callback_menu_help,
+    'rule_card': callback_rule_card,
+    'rule_toggle': callback_rule_toggle,
+    'rule_delete_ask': callback_rule_delete_ask,
+    # Einrichtungs-Assistent
+    'wizard_start': callback_wizard_start,
+    'wz_page': callback_wizard_page,
+    'wz_sel': callback_wizard_select,
+    'wz_search': callback_wizard_search,
+    'wz_link': callback_wizard_link,
+    'wz_mode': callback_wizard_mode,
+    # Filterwörter
+    'words': callback_words,
+    'word_add': callback_word_add,
+    'word_del': callback_word_delete,
+    'word_clear': callback_word_clear,
+    'word_clear_yes': callback_word_clear_yes,
+    'word_export': callback_word_export,
+    'word_import': callback_word_import,
+    # Textersetzungen
+    'replaces': callback_replaces,
+    'rep_add': callback_replace_add,
+    'rep_add_empty': callback_replace_add_empty,
+    'rep_del': callback_replace_delete,
+    'rep_clear': callback_replace_clear,
+    'rep_clear_yes': callback_replace_clear_yes,
+    'rep_export': callback_replace_export,
+    'rep_import': callback_replace_import,
+    # Konto verbinden
+    'login_start': callback_login_start,
+    'login_cancel': callback_login_cancel,
+    'login_resend': callback_login_resend,
     'toggle_current': callback_toggle_current,
     'switch': callback_switch,
     'settings': callback_settings,

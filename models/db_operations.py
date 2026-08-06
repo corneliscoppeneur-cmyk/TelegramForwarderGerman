@@ -1,5 +1,5 @@
 from sqlalchemy.exc import IntegrityError
-from models.models import Keyword, ReplaceRule, ForwardRule, MediaTypes, MediaExtensions, RSSConfig, RSSPattern, User, RuleSync, PushConfig
+from models.models import Chat, Keyword, ReplaceRule, ForwardRule, MediaTypes, MediaExtensions, RSSConfig, RSSPattern, User, RuleSync, PushConfig
 from werkzeug.security import check_password_hash, generate_password_hash
 from sqlalchemy.orm import joinedload
 import logging
@@ -1180,3 +1180,59 @@ class DBOperations:
             session.rollback()
             logger.error(f"删除推送配置时出错: {str(e)}")
             return False, f"删除推送配置失败: {str(e)}"
+
+
+def _get_or_create_chat(session, entity):
+    """Chat-Datensatz zu einer Telegram-Entität holen oder anlegen."""
+    chat = session.query(Chat).filter(
+        Chat.telegram_chat_id == str(entity.id)
+    ).first()
+
+    if not chat:
+        chat = Chat(
+            telegram_chat_id=str(entity.id),
+            name=entity.title if hasattr(entity, 'title') else 'Private Chat'
+        )
+        session.add(chat)
+        session.flush()
+
+    return chat
+
+
+def create_forward_rule(session, source_entity, target_entity):
+    """Weiterleitung von ``source_entity`` nach ``target_entity`` anlegen.
+
+    Gemeinsame Grundlage für den Befehl ``/bind`` und den Einrichtungs-Assistenten.
+
+    Returns:
+        (rule, created): ``created`` ist False, wenn es die Weiterleitung schon gab.
+    """
+    source_chat_db = _get_or_create_chat(session, source_entity)
+    target_chat_db = _get_or_create_chat(session, target_entity)
+
+    # Wenn im Zielchat noch keine Quelle ausgewählt ist, die neue verwenden
+    if not target_chat_db.current_add_id:
+        target_chat_db.current_add_id = str(source_entity.id)
+
+    rule = ForwardRule(
+        source_chat_id=source_chat_db.id,
+        target_chat_id=target_chat_db.id
+    )
+
+    # Beim Binden auf sich selbst ist die Weiße Liste der einzig sinnvolle Modus
+    if str(source_entity.id) == str(target_entity.id):
+        rule.forward_mode = ForwardMode.WHITELIST
+        rule.add_mode = AddMode.WHITELIST
+
+    session.add(rule)
+
+    try:
+        session.commit()
+        return rule, True
+    except IntegrityError:
+        session.rollback()
+        existing = session.query(ForwardRule).filter(
+            ForwardRule.source_chat_id == source_chat_db.id,
+            ForwardRule.target_chat_id == target_chat_db.id
+        ).first()
+        return existing, False

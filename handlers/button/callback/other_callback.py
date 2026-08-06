@@ -1107,8 +1107,11 @@ async def callback_perform_delete_rule(event, rule_id_data, session, message, da
                 Button.inline(t('common.btn.close'), 'close_settings')
             ]]
         else:
-            # 如果是删除的当前规则，只提供关闭按钮
-            buttons = [[Button.inline(t('common.btn.close'), 'close_settings')]]
+            # Nach dem Löschen zurück zur Übersicht statt in eine Sackgasse
+            buttons = [[
+                Button.inline(t('menu.btn.my_forwards'), 'menu_rules:0'),
+                Button.inline(t('common.btn.close'), 'close_settings')
+            ]]
 
         # 发送结果消息
         await send_message_and_delete(

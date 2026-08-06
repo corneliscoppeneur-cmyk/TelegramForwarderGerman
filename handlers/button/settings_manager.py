@@ -465,14 +465,8 @@ async def create_buttons(rule):
         current_add_id = target_chat.current_add_id
         source_chat = rule.source_chat
 
-        # 添加规则切换按钮
-        is_current = current_add_id == source_chat.telegram_chat_id
-        buttons.append([
-            Button.inline(
-                f"{'✅ ' if is_current else ''}{t('settings.rule.apply_current')}",
-                f"toggle_current:{rule.id}"
-            )
-        ])
+        # Der frühere Schalter "aktuelle Regel anwenden" betrifft nur die alten
+        # Textbefehle (/switch) und ist in der Button-Bedienung nicht nötig.
 
         buttons.append([
             Button.inline(
@@ -637,17 +631,18 @@ async def create_buttons(rule):
                 )
             ])
 
-            buttons.append([
-                Button.inline(
-                    t('common.btn.back'),
-                    "settings"
-                ),
-                Button.inline(
-                    t('common.btn.close'),
-                    "close_settings"
-                )
-            ])
-
+        # Zurueck fuehrt immer zur Detailkarte der Weiterleitung – auch wenn die
+        # Weiterleitung ueber das eigene Konto statt ueber den Bot laeuft.
+        buttons.append([
+            Button.inline(
+                t('common.btn.back'),
+                f"rule_card:{rule.id}"
+            ),
+            Button.inline(
+                t('common.btn.close'),
+                "close_settings"
+            )
+        ])
 
     finally:
         session.close()

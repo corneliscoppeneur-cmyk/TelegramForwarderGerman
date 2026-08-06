@@ -26,6 +26,21 @@ async def handle_prompt_setting(event, client, sender_id, chat_id, current_state
     prompt_type = None
     template_type = None
 
+    if current_state.startswith(("login_phone:", "login_code:", "login_password:")):
+        # Telegram-Konto im Chat verbinden
+        from handlers.button.account_login import apply_text_input as apply_login_input
+        return await apply_login_input(event, client, sender_id, chat_id, current_state, message)
+
+    if current_state.startswith(("wizard_search:", "wizard_link:")):
+        # Freitext-Eingabe des Einrichtungs-Assistenten
+        from handlers.button.callback.wizard_callback import apply_text_input
+        return await apply_text_input(event, client, sender_id, chat_id, current_state, message)
+
+    if current_state.startswith(("word_add:", "word_import:", "rep_add_from:", "rep_add_to:", "rep_import:")):
+        # Eingaben zu Filterwörtern und Textersetzungen
+        from handlers.button.callback.keyword_callback import apply_text_input as apply_words_input
+        return await apply_words_input(event, client, sender_id, chat_id, current_state, message)
+
     if current_state.startswith("set_summary_prompt:"):
         rule_id = current_state.split(":")[1]
         field_name = "summary_prompt"

@@ -20,6 +20,9 @@ import models.models as models
 from utils.auto_delete import respond_and_delete,reply_and_delete,async_delete_user_message
 from utils.common import get_bot_client
 from handlers.button.settings_manager import create_settings_text, create_buttons
+from handlers.button.menu import build_main_menu
+from handlers.button.account_login import is_connected
+from models.db_operations import create_forward_rule
 
 logger = logging.getLogger(__name__)
 
@@ -108,66 +111,28 @@ async def handle_bind_command(event, client, parts):
             await reply_and_delete(event,t('cmd.bind.get_chat_error'))
             return
 
-        # 保存到数据库
+        # 保存到数据库（与设置向导共用同一逻辑）
         session = get_session()
         try:
-            # 保存源聊天
-            source_chat_db = session.query(Chat).filter(
-                Chat.telegram_chat_id == str(source_chat_entity.id)
-            ).first()
+            rule, created = create_forward_rule(session, source_chat_entity, target_chat_entity)
 
-            if not source_chat_db:
-                source_chat_db = Chat(
-                    telegram_chat_id=str(source_chat_entity.id),
-                    name=source_chat_entity.title if hasattr(source_chat_entity, 'title') else 'Private Chat'
-                )
-                session.add(source_chat_db)
-                session.flush()
-
-            # 保存目标聊天
-            target_chat_db = session.query(Chat).filter(
-                Chat.telegram_chat_id == str(target_chat_entity.id)
-            ).first()
-
-            if not target_chat_db:
-                target_chat_db = Chat(
-                    telegram_chat_id=str(target_chat_entity.id),
-                    name=target_chat_entity.title if hasattr(target_chat_entity, 'title') else 'Private Chat'
-                )
-                session.add(target_chat_db)
-                session.flush()
-
-            # 如果当前没有选中的源聊天，就设置为新绑定的聊天
-            if not target_chat_db.current_add_id:
-                target_chat_db.current_add_id = str(source_chat_entity.id)
-
-            # 创建转发规则
-            rule = ForwardRule(
-                source_chat_id=source_chat_db.id,
-                target_chat_id=target_chat_db.id
-            )
-            
-            # 如果是绑定自己，则默认使用白名单模式
-            if str(source_chat_entity.id) == str(target_chat_entity.id):
-                rule.forward_mode = ForwardMode.WHITELIST
-                rule.add_mode = AddMode.WHITELIST
-                
-            session.add(rule)
-            session.commit()
+            source_chat_db = rule.source_chat if rule else None
+            target_chat_db = rule.target_chat if rule else None
 
             await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
+
+            if not created:
+                await reply_and_delete(event,
+                    t('cmd.bind.exists',
+                      source_name=source_chat_db.name if source_chat_db else '',
+                      target_name=target_chat_db.name if target_chat_db else '')
+                )
+                return
+
             await reply_and_delete(event,
                 t('cmd.bind.success', source_name=source_chat_db.name, source_id=source_chat_db.telegram_chat_id, target_name=target_chat_db.name, target_id=target_chat_db.telegram_chat_id),
                 buttons=[Button.inline(t('cmd.bind.btn.open_settings'), f"rule_settings:{rule.id}")]
             )
-
-        except IntegrityError:
-            session.rollback()
-            await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-            await reply_and_delete(event,
-                t('cmd.bind.exists', source_name=source_chat_db.name, target_name=target_chat_db.name)
-            )
-            return
         finally:
             session.close()
 
@@ -754,9 +719,19 @@ async def handle_changelog_command(event):
 async def handle_start_command(event):
     """处理 start 命令"""
 
-    welcome_text = t("cmd.start.text", version=VERSION)
+    connected = await is_connected()
+    welcome_text = t("cmd.start.text", version=VERSION) if connected else t('login.needed.text')
+
     await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-    await reply_and_delete(event,welcome_text, parse_mode='html', link_preview=False)
+    # Startnachricht bleibt stehen (-1): sie trägt das Hauptmenü.
+    await reply_and_delete(
+        event,
+        welcome_text,
+        delete_after_seconds=-1,
+        parse_mode='html',
+        link_preview=False,
+        buttons=build_main_menu(connected),
+    )
 
 async def handle_help_command(event, command):
     """处理帮助命令"""
@@ -764,8 +739,14 @@ async def handle_help_command(event, command):
 
     await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
 
-    await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
-    await reply_and_delete(event,help_text, parse_mode='html', link_preview=False)
+    await reply_and_delete(
+        event,
+        help_text,
+        delete_after_seconds=-1,
+        parse_mode='html',
+        link_preview=False,
+        buttons=build_main_menu(),
+    )
 
 async def handle_export_keyword_command(event, command):
     """处理 export_keyword 命令"""

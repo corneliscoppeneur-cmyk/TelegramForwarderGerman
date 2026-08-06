@@ -2,6 +2,9 @@ from telethon import events
 from handlers.button.callback.callback_handlers import handle_callback
 from handlers.command_handlers import *
 from handlers.link_handlers import handle_message_link
+from handlers.button.menu import build_main_menu
+from handlers.button.account_login import is_connected
+from utils.i18n import t
 from telethon.tl.types import ChannelParticipantsAdmins
 from dotenv import load_dotenv
 from utils.common import *
@@ -150,11 +153,15 @@ async def send_welcome_message(client):
     user_id = await get_user_id()
 
     # 发送新消息
+    # Ohne angemeldetes Konto führt der Start direkt in die Anmeldung
+    connected = await is_connected()
+
     await client.send_message(
         user_id,
-        WELCOME_TEXT,
+        WELCOME_TEXT if connected else t('login.needed.text'),
         parse_mode='html',
-        link_preview=True
+        link_preview=True,
+        buttons=build_main_menu(connected)
     )
     logger.info("已发送欢迎消息")
 

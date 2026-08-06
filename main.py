@@ -1,10 +1,11 @@
-from telethon import TelegramClient, types
+﻿from telethon import TelegramClient, types
 from telethon.tl.types import BotCommand
 from telethon.tl.functions.bots import SetBotCommandsRequest
 from models.models import init_db
 from dotenv import load_dotenv
 from message_listener import setup_listeners
 import os
+import sys
 import asyncio
 import logging
 from utils.i18n import t
@@ -78,21 +79,54 @@ def run_rss_server(host: str, port: int):
     )
 
 
+async def start_account_services():
+    """Dienste starten, die ein angemeldetes Telegram-Konto voraussetzen.
+
+    Wird beim Start aufgerufen und noch einmal, sobald sich jemand über den
+    Bot-Chat angemeldet hat. Mehrfachaufrufe sind unschädlich.
+    """
+    global scheduler, chat_updater
+
+    if not await user_client.is_user_authorized():
+        return False
+
+    if scheduler is None:
+        scheduler = SummaryScheduler(user_client, bot_client)
+        await scheduler.start()
+
+    if chat_updater is None:
+        chat_updater = ChatUpdater(user_client)
+        await chat_updater.start()
+
+    return True
+
+
 async def start_clients():
     # 初始化 DBOperations
     global db_ops, scheduler, chat_updater
     db_ops = await DBOperations.create()
 
     try:
-        # 启动用户客户端
-        await user_client.start(phone=phone_number)
-        me_user = await user_client.get_me()
-        print(f'用户客户端已启动: {me_user.first_name} (@{me_user.username})')
-
         # 启动机器人客户端
         await bot_client.start(bot_token=bot_token)
         me_bot = await bot_client.get_me()
         print(f'机器人客户端已启动: {me_bot.first_name} (@{me_bot.username})')
+
+        # Nutzerkonto verbinden, aber NICHT im Terminal nach einem Code fragen:
+        # ohne angemeldetes Konto läuft die Anmeldung über den Bot-Chat.
+        await user_client.connect()
+        authorized = await user_client.is_user_authorized()
+
+        # Am interaktiven Terminal bleibt der bisherige Weg erhalten
+        if not authorized and phone_number and sys.stdin.isatty():
+            await user_client.start(phone=phone_number)
+            authorized = await user_client.is_user_authorized()
+
+        if authorized:
+            me_user = await user_client.get_me()
+            print(f'用户客户端已启动: {me_user.first_name} (@{me_user.username})')
+        else:
+            logger.warning('Kein Telegram-Konto angemeldet – Anmeldung läuft über den Bot-Chat')
 
         # 设置消息监听器
         await setup_listeners(user_client, bot_client)
@@ -100,13 +134,8 @@ async def start_clients():
         # 注册命令
         await register_bot_commands(bot_client)
 
-        # 创建并启动调度器
-        scheduler = SummaryScheduler(user_client, bot_client)
-        await scheduler.start()
-        
-        # 创建并启动聊天信息更新器
-        chat_updater = ChatUpdater(user_client)
-        await chat_updater.start()
+        # Zeitgesteuerte Dienste nur mit angemeldetem Konto
+        await start_account_services()
 
         # 如果启用了 RSS 服务
         if os.getenv('RSS_ENABLED', '').lower() == 'true':
@@ -165,8 +194,11 @@ async def register_bot_commands(bot):
     # except Exception as e:
     #     logger.error(f'清空机器人命令时出错: {str(e)}')
 
+    # Sichtbares Befehlsmenue bewusst auf zwei Eintraege reduziert:
+    # Die Bedienung laeuft ueber Inline-Buttons. Alle uebrigen Befehle
+    # funktionieren weiterhin (siehe handlers/bot_handler.py), werden aber
+    # nicht mehr im Telegram-Menue angeboten.
     commands = [
-        # 基础命令
         BotCommand(
             command='start',
             description=t('botcmd.start')
@@ -175,167 +207,23 @@ async def register_bot_commands(bot):
             command='help',
             description=t('botcmd.help')
         ),
-        # 绑定和设置
-        BotCommand(
-            command='bind',
-            description=t('botcmd.bind')
-        ),
-        BotCommand(
-            command='settings',
-            description=t('botcmd.settings')
-        ),
-        BotCommand(
-            command='switch',
-            description=t('botcmd.switch')
-        ),
-        # 关键字管理
-        BotCommand(
-            command='add',
-            description=t('botcmd.add')
-        ),
-        BotCommand(
-            command='add_regex',
-            description=t('botcmd.add_regex')
-        ),
-        BotCommand(
-            command='add_all',
-            description=t('botcmd.add_all')
-        ),
-        BotCommand(
-            command='add_regex_all',
-            description=t('botcmd.add_regex_all')
-        ),
-        BotCommand(
-            command='list_keyword',
-            description=t('botcmd.list_keyword')
-        ),
-        BotCommand(
-            command='remove_keyword',
-            description=t('botcmd.remove_keyword')
-        ),
-        BotCommand(
-            command='remove_keyword_by_id',
-            description=t('botcmd.remove_keyword_by_id')
-        ),
-        BotCommand(
-            command='remove_all_keyword',
-            description=t('botcmd.remove_all_keyword')
-        ),
-        # 替换规则管理
-        BotCommand(
-            command='replace',
-            description=t('botcmd.replace')
-        ),
-        BotCommand(
-            command='replace_all',
-            description=t('botcmd.replace_all')
-        ),
-        BotCommand(
-            command='list_replace',
-            description=t('botcmd.list_replace')
-        ),
-        BotCommand(
-            command='remove_replace',
-            description=t('botcmd.remove_replace')
-        ),
-        # 导入导出功能
-        BotCommand(
-            command='export_keyword',
-            description=t('botcmd.export_keyword')
-        ),
-        BotCommand(
-            command='export_replace',
-            description=t('botcmd.export_replace')
-        ),
-        BotCommand(
-            command='import_keyword',
-            description=t('botcmd.import_keyword')
-        ),
-        BotCommand(
-            command='import_regex_keyword',
-            description=t('botcmd.import_regex_keyword')
-        ),
-        BotCommand(
-            command='import_replace',
-            description=t('botcmd.import_replace')
-        ),
-        # UFB相关功能
-        BotCommand(
-            command='ufb_bind',
-            description=t('botcmd.ufb_bind')
-        ),
-        BotCommand(
-            command='ufb_unbind',
-            description=t('botcmd.ufb_unbind')
-        ),
-        BotCommand(
-            command='ufb_item_change',
-            description=t('botcmd.ufb_item_change')
-        ),
-        BotCommand(
-            command='clear_all_keywords',
-            description=t('botcmd.clear_all_keywords')
-        ),
-        BotCommand(
-            command='clear_all_keywords_regex',
-            description=t('botcmd.clear_all_keywords_regex')
-        ),
-        BotCommand(
-            command='clear_all_replace',
-            description=t('botcmd.clear_all_replace')
-        ),
-        BotCommand(
-            command='copy_keywords',
-            description=t('botcmd.copy_keywords')
-        ),
-        BotCommand(
-            command='copy_keywords_regex',
-            description=t('botcmd.copy_keywords_regex')
-        ),
-        BotCommand(
-            command='copy_replace',
-            description=t('botcmd.copy_replace')
-        ),
-        BotCommand(
-            command='copy_rule',
-            description=t('botcmd.copy_rule')
-        ),
-        BotCommand(
-            command='changelog',
-            description=t('botcmd.changelog')
-        ),
-        BotCommand(
-            command='list_rule',
-            description=t('botcmd.list_rule')
-        ),
-        BotCommand(
-            command='delete_rule',
-            description=t('botcmd.delete_rule')
-        ),
-        BotCommand(
-            command='delete_rss_user',
-            description=t('botcmd.delete_rss_user')
-        ),
-
-
-        # BotCommand(
-        #     command='clear_all',
-        #     description='慎用！清空所有数据'
-        # ),
     ]
 
-    try:
-        result = await bot(SetBotCommandsRequest(
-            scope=types.BotCommandScopeDefault(),
-            lang_code='de',
-            commands=commands
-        ))
-        if result:
-            logger.info('已成功注册机器人命令')
-        else:
-            logger.error('注册机器人命令失败')
-    except Exception as e:
-        logger.error(f'注册机器人命令时出错: {str(e)}')
+    # Ohne Sprachcode registrieren, damit das Menue auch bei Telegram-Clients
+    # mit anderer Oberflaechensprache erscheint; zusaetzlich fuer 'de'.
+    for lang_code in ('', 'de'):
+        try:
+            result = await bot(SetBotCommandsRequest(
+                scope=types.BotCommandScopeDefault(),
+                lang_code=lang_code,
+                commands=commands
+            ))
+            if result:
+                logger.info(f'已成功注册机器人命令 (lang_code={lang_code or "default"})')
+            else:
+                logger.error(f'注册机器人命令失败 (lang_code={lang_code or "default"})')
+        except Exception as e:
+            logger.error(f'注册机器人命令时出错: {str(e)}')
 
 
 if __name__ == '__main__':
