@@ -116,12 +116,13 @@ class BotApiMessage:
         self.sender_id = msg.get("from", {}).get("id")
         self.chat_id = msg.get("chat", {}).get("id")
         self.text = msg.get("text")
+        self.chat = type('Chat', (), {'id': self.chat_id})()  # Für Handler
         self._message_data = msg
         self.bot_client = bot_client
 
     async def get_chat(self):
         """Simuliere event.get_chat()"""
-        return type('Chat', (), {'id': self.chat_id})()
+        return self.chat
 
 
 class BotApiCallback:
