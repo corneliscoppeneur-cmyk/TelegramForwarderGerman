@@ -17,6 +17,7 @@ from scheduler.chat_updater import ChatUpdater
 from handlers.bot_handler import send_welcome_message
 from rss.main import app as rss_app
 from utils.log_config import setup_logging
+from utils.proxy import build_proxy
 
 # 设置Docker日志的默认配置，如果docker-compose.yml中没有配置日志选项将使用这些值
 os.environ.setdefault('DOCKER_LOG_MAX_SIZE', '10m')
@@ -62,9 +63,17 @@ def clear_temp_dir():
         os.remove(os.path.join('./temp', file))
 
 
+# Optionaler Proxy: eigene Ausgangs-IP je Instanz (PROXY_URL in der .env)
+_proxy, _proxy_connection = build_proxy()
+_client_options = {}
+if _proxy:
+    _client_options['proxy'] = _proxy
+if _proxy_connection:
+    _client_options['connection'] = _proxy_connection
+
 # 创建客户端
-user_client = TelegramClient('./sessions/user', api_id, api_hash)
-bot_client = TelegramClient('./sessions/bot', api_id, api_hash)
+user_client = TelegramClient('./sessions/user', api_id, api_hash, **_client_options)
+bot_client = TelegramClient('./sessions/bot', api_id, api_hash, **_client_options)
 
 # 初始化数据库
 engine = init_db()
