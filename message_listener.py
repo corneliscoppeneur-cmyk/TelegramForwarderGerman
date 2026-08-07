@@ -65,11 +65,15 @@ async def bot_api_polling_loop(bot_client, bot_token):
 
     logger.info("[BOT-API] Bot API Polling-Schleife gestartet")
     api_url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
+    logger.info(f"[BOT-API] API URL: {api_url[:50]}...")
 
     async with aiohttp.ClientSession() as session:
+        poll_count = 0
         while True:
             try:
+                poll_count += 1
                 params = {"offset": _last_update_id + 1, "timeout": 30}
+                logger.debug(f"[BOT-API] Poll #{poll_count}: offset={_last_update_id + 1}")
                 async with session.post(api_url, json=params) as resp:
                     if resp.status != 200:
                         logger.error(f"[BOT-API] HTTP {resp.status}")
