@@ -141,10 +141,13 @@ async def request_code(phone, user_id):
             await client.connect()
         sent = await client.send_code_request(phone)
     except PhoneNumberInvalidError:
+        logger.warning('Anmeldung: Telefonnummer von Telegram abgelehnt')
         return False, t('login.phone.invalid'), [[Button.inline(t('login.btn.retry'), 'login_start')]]
     except ApiIdInvalidError:
+        logger.error('Anmeldung: API_ID und API_HASH passen nicht zusammen (.env prüfen)')
         return False, t('login.api_invalid'), [[Button.inline(t('menu.btn.cancel'), 'login_cancel')]]
     except FloodWaitError as e:
+        logger.warning(f'Anmeldung: Telegram bremst aus, {e.seconds}s warten')
         return False, t('login.flood_wait', seconds=e.seconds), [[Button.inline(t('menu.btn.cancel'), 'login_cancel')]]
     except Exception as e:
         logger.error(f'Code anfordern fehlgeschlagen: {e}')
