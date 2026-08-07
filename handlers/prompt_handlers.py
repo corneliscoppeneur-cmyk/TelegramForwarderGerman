@@ -36,6 +36,11 @@ async def handle_prompt_setting(event, client, sender_id, chat_id, current_state
         from handlers.button.callback.wizard_callback import apply_text_input
         return await apply_text_input(event, client, sender_id, chat_id, current_state, message)
 
+    if current_state.startswith("repeat_interval:"):
+        # Eigener Abstand für die Wiederholung
+        from handlers.button.callback.repeat_callback import apply_text_input as apply_repeat_input
+        return await apply_repeat_input(event, client, sender_id, chat_id, current_state, message)
+
     if current_state.startswith(("word_add:", "word_import:", "rep_add_from:", "rep_add_to:", "rep_import:")):
         # Eingaben zu Filterwörtern und Textersetzungen
         from handlers.button.callback.keyword_callback import apply_text_input as apply_words_input

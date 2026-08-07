@@ -14,6 +14,7 @@ from filters.init_filter import InitFilter
 from filters.reply_filter import ReplyFilter
 from filters.rss_filter import RSSFilter
 from filters.push_filter import PushFilter
+from filters.repeat_filter import RepeatFilter
 logger = logging.getLogger(__name__)
 
 async def process_forward_rule(client, event, chat_id, rule):
@@ -72,7 +73,10 @@ async def process_forward_rule(client, event, chat_id, rule):
 
     # 添加推送过滤器
     filter_chain.add_filter(PushFilter())
-    
+
+    # Wiederholung: zuletzt gesendeten Beitrag merken
+    filter_chain.add_filter(RepeatFilter())
+
     # 添加删除原始消息过滤器（最后执行）
     filter_chain.add_filter(DeleteOriginalFilter())
     

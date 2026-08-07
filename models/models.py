@@ -77,6 +77,14 @@ class ForwardRule(Base):
     # 同步功能相关
     enable_sync = Column(Boolean, default=False)  # 是否启用规则同步功能
 
+    # Wiederholung: den zuletzt weitergeleiteten Beitrag erneut senden
+    enable_repeat = Column(Boolean, default=False)  # Wiederholung an/aus
+    repeat_interval = Column(Integer, default=60)  # Abstand in Minuten
+    last_message_id = Column(Integer, nullable=True)  # zuletzt im Ziel erzeugte Nachricht
+
+    # Bezahlte Medien (Telegram Stars)
+    paid_media_stars = Column(Integer, nullable=True)  # Preis; leer = Preis des Originals
+
     # 添加唯一约束
     __table_args__ = (
         UniqueConstraint('source_chat_id', 'target_chat_id', name='unique_source_target'),
@@ -365,6 +373,10 @@ def migrate_db(engine):
         'enable_only_push': 'ALTER TABLE forward_rules ADD COLUMN enable_only_push BOOLEAN DEFAULT FALSE',
         'media_allow_text': 'ALTER TABLE forward_rules ADD COLUMN media_allow_text BOOLEAN DEFAULT FALSE',
         'enable_ai_upload_image': 'ALTER TABLE forward_rules ADD COLUMN enable_ai_upload_image BOOLEAN DEFAULT FALSE',
+        'enable_repeat': 'ALTER TABLE forward_rules ADD COLUMN enable_repeat BOOLEAN DEFAULT FALSE',
+        'repeat_interval': 'ALTER TABLE forward_rules ADD COLUMN repeat_interval INTEGER DEFAULT 60',
+        'last_message_id': 'ALTER TABLE forward_rules ADD COLUMN last_message_id INTEGER DEFAULT NULL',
+        'paid_media_stars': 'ALTER TABLE forward_rules ADD COLUMN paid_media_stars INTEGER DEFAULT NULL',
     }
 
     keywords_new_columns = {

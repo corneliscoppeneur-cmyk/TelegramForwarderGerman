@@ -40,6 +40,12 @@ from handlers.button.callback.keyword_callback import (
     callback_replace_export,
     callback_replace_import,
 )
+from handlers.button.callback.repeat_callback import (
+    callback_repeat,
+    callback_repeat_toggle,
+    callback_repeat_set,
+    callback_repeat_custom,
+)
 from handlers.button.account_login import (
     callback_login_start,
     callback_login_cancel,
@@ -673,6 +679,11 @@ CALLBACK_HANDLERS = {
     'rule_card': callback_rule_card,
     'rule_toggle': callback_rule_toggle,
     'rule_delete_ask': callback_rule_delete_ask,
+    # Wiederholung
+    'repeat': callback_repeat,
+    'repeat_toggle': callback_repeat_toggle,
+    'repeat_set': callback_repeat_set,
+    'repeat_custom': callback_repeat_custom,
     # Einrichtungs-Assistent
     'wizard_start': callback_wizard_start,
     'wz_page': callback_wizard_page,

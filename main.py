@@ -13,6 +13,7 @@ import multiprocessing
 from models.db_operations import DBOperations
 from scheduler.summary_scheduler import SummaryScheduler
 from scheduler.chat_updater import ChatUpdater
+from scheduler.repeat_scheduler import RepeatScheduler
 from handlers.bot_handler import send_welcome_message
 from rss.main import app as rss_app
 from utils.log_config import setup_logging
@@ -42,6 +43,7 @@ db_ops = None
 scheduler = None
 chat_updater = None
 user_updates_task = None
+repeat_scheduler = None
 
 
 async def init_db_ops():
@@ -151,6 +153,11 @@ async def start_clients():
         # 注册命令
         await register_bot_commands(bot_client)
 
+        # Wiederholung läuft über den Bot und braucht daher kein angemeldetes Konto
+        global repeat_scheduler
+        repeat_scheduler = RepeatScheduler(user_client, bot_client)
+        await repeat_scheduler.start()
+
         # Zeitgesteuerte Dienste nur mit angemeldetem Konto
         await start_account_services()
 
@@ -191,6 +198,9 @@ async def start_clients():
         # 停止聊天信息更新器
         if chat_updater:
             chat_updater.stop()
+        # Wiederholung beenden
+        if repeat_scheduler:
+            repeat_scheduler.stop()
         # 如果 RSS 服务在运行，停止它
         if 'rss_process' in locals() and rss_process.is_alive():
             rss_process.terminate()

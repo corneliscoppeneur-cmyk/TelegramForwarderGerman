@@ -140,6 +140,9 @@ def build_rule_card(session, rule_id):
     )
 
     toggle_label = t('menu.btn.turn_off') if rule.enable_rule else t('menu.btn.turn_on')
+    repeat_label = t('menu.btn.repeat')
+    if rule.enable_repeat:
+        repeat_label += ' ✅'
 
     buttons = [
         [Button.inline(toggle_label, f'rule_toggle:{rule.id}')],
@@ -147,7 +150,10 @@ def build_rule_card(session, rule_id):
             Button.inline(t('menu.btn.words'), f'words:{rule.id}:0'),
             Button.inline(t('menu.btn.replaces'), f'replaces:{rule.id}:0'),
         ],
-        [Button.inline(t('menu.btn.settings'), f'rule_settings:{rule.id}')],
+        [
+            Button.inline(t('menu.btn.settings'), f'rule_settings:{rule.id}'),
+            Button.inline(repeat_label, f'repeat:{rule.id}'),
+        ],
         [
             Button.inline(t('menu.btn.copy'), f'copy_rule:{rule.id}'),
             Button.inline(t('menu.btn.delete'), f'rule_delete_ask:{rule.id}'),
