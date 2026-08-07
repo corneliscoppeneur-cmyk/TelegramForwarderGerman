@@ -5,141 +5,68 @@ from handlers import user_handler, bot_handler
 from handlers.prompt_handlers import handle_prompt_setting
 import asyncio
 import os
-import json
-import aiohttp
 from dotenv import load_dotenv
 from telethon.tl.types import ChannelParticipantsAdmins
 from managers.state_manager import state_manager
 from telethon.tl import types
 from filters.process import process_forward_rule
-
+# 加载环境变量
 load_dotenv()
 
+# 获取logger
 logger = logging.getLogger(__name__)
+
+# 添加一个缓存来存储已处理的媒体组
 PROCESSED_GROUPS = set()
+
 BOT_ID = None
-_last_update_id = 0
 
 
 async def setup_listeners(user_client, bot_client):
-    """设置消息监听器 + Bot API Polling"""
+    """
+    设置消息监听器
+
+    Args:
+        user_client: 用户客户端（用于监听消息和转发）
+        bot_client: 机器人客户端（用于处理命令和转发）
+    """
     global BOT_ID
 
+    # 直接获取机器人ID
     try:
         me = await bot_client.get_me()
         BOT_ID = me.id
-        logger.info(f"获取到机器人ID: {BOT_ID}")
+        logger.info(f"获取到机器人ID: {BOT_ID} (类型: {type(BOT_ID)})")
     except Exception as e:
         logger.error(f"获取机器人ID时出错: {str(e)}")
-        return
 
-    bot_token = os.getenv('BOT_TOKEN')
-    if not bot_token:
-        logger.error("BOT_TOKEN nicht gesetzt!")
-        return
-
-    # Starte Bot API Polling (HTTP-direkter Zugriff auf Telegram)
-    logger.info("[BOT-API] Starte Bot API HTTP-Polling")
-    asyncio.create_task(bot_api_polling_loop(bot_client, bot_token))
-
-    # User-Client für Weiterleitung
+    # 过滤器，排除机器人自己的消息
     async def not_from_bot(event):
         if BOT_ID is None:
-            return True
-        try:
-            return int(event.sender_id) != BOT_ID
-        except (ValueError, TypeError):
-            return True
+            return True  # 如果未获取到机器人ID，不进行过滤
 
+        sender = event.sender_id
+        try:
+            sender_id = int(sender) if sender is not None else None
+            is_not_bot = sender_id != BOT_ID
+            if not is_not_bot:
+                logger.info(f"过滤器识别到机器人消息，忽略处理: {sender_id}")
+            return is_not_bot
+        except (ValueError, TypeError):
+            return True  # 转换失败时不过滤
+
+    # 用户客户端监听器 - 使用过滤器，避免处理机器人消息
     @user_client.on(events.NewMessage(func=not_from_bot))
     async def user_message_handler(event):
         await handle_user_message(event, user_client, bot_client)
 
+    # 机器人客户端监听器 - 使用过滤器
+    @bot_client.on(events.NewMessage(func=not_from_bot))
+    async def bot_message_handler(event):
+        await handle_bot_message(event, bot_client)
+
+    # 注册机器人回调处理器
     bot_client.add_event_handler(bot_handler.callback_handler)
-    logger.info("[INFO] Message listeners setup complete")
-
-
-async def bot_api_polling_loop(bot_client, bot_token):
-    """Rufe Updates direkt von Telegram Bot API ab (kein Telethon)."""
-    global _last_update_id
-
-    logger.info("[BOT-API] Bot API Polling-Schleife gestartet")
-    api_url = f"https://api.telegram.org/bot{bot_token}/getUpdates"
-    logger.info(f"[BOT-API] API URL: {api_url[:50]}...")
-
-    async with aiohttp.ClientSession() as session:
-        poll_count = 0
-        while True:
-            try:
-                poll_count += 1
-                params = {"offset": _last_update_id + 1, "timeout": 30}
-                logger.debug(f"[BOT-API] Poll #{poll_count}: offset={_last_update_id + 1}")
-                async with session.post(api_url, json=params) as resp:
-                    if resp.status != 200:
-                        logger.error(f"[BOT-API] HTTP {resp.status}")
-                        await asyncio.sleep(5)
-                        continue
-
-                    data = await resp.json()
-                    if not data.get("ok"):
-                        logger.error(f"[BOT-API] Telegram error: {data.get('description')}")
-                        await asyncio.sleep(5)
-                        continue
-
-                    updates = data.get("result", [])
-                    if updates:
-                        logger.info(f"[BOT-API] {len(updates)} Updates empfangen")
-
-                    for update in updates:
-                        try:
-                            _last_update_id = update["update_id"]
-                            message = update.get("message")
-                            callback = update.get("callback_query")
-
-                            if message:
-                                event = BotApiMessage(message, bot_client)
-                                await handle_bot_message(event, bot_client)
-                            elif callback:
-                                event = BotApiCallback(callback, bot_client)
-                                await bot_handler.callback_handler(event)
-
-                        except Exception as e:
-                            logger.error(f"[BOT-API] Update-Error: {e}", exc_info=True)
-
-            except asyncio.TimeoutError:
-                pass
-            except Exception as e:
-                logger.error(f"[BOT-API] Polling-Error: {e}", exc_info=True)
-                await asyncio.sleep(5)
-
-
-class BotApiMessage:
-    """Telethon-kompatibles Event-Wrapper für Bot API Messages."""
-    def __init__(self, msg, bot_client):
-        self.message = self
-        self.sender_id = msg.get("from", {}).get("id")
-        self.chat_id = msg.get("chat", {}).get("id")
-        self.text = msg.get("text")
-        self.chat = type('Chat', (), {'id': self.chat_id})()  # Für Handler
-        self._message_data = msg
-        self.bot_client = bot_client
-
-    async def get_chat(self):
-        """Simuliere event.get_chat()"""
-        return self.chat
-
-
-class BotApiCallback:
-    """Telethon-kompatibles Event-Wrapper für Callbacks."""
-    def __init__(self, callback, bot_client):
-        self.data = callback.get("data", "").encode() if callback.get("data") else b""
-        self.sender_id = callback.get("from", {}).get("id")
-        self.chat_id = callback.get("message", {}).get("chat", {}).get("id")
-        self._callback_data = callback
-        self.bot_client = bot_client
-
-    async def get_chat(self):
-        return type('Chat', (), {'id': self.chat_id})()
 
 async def handle_user_message(event, user_client, bot_client):
     """处理用户客户端收到的消息"""
@@ -239,9 +166,8 @@ async def handle_user_message(event, user_client, bot_client):
 async def handle_bot_message(event, bot_client):
     """处理机器人客户端收到的消息（命令）"""
     try:
+        # logger.info("handle_bot_message:开始处理机器人消息")
 
-        logger.info("[DEBUG] handle_bot_message: Nachricht empfangen, Admin-Check wird durchgeführt")
-        
         chat = await event.get_chat()
         chat_id = abs(chat.id)
         # logger.info(f"handle_bot_message:获取到聊天ID: {chat_id}")

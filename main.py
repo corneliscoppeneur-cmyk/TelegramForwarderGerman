@@ -180,17 +180,7 @@ async def start_clients():
         # Der Bot hält den Prozess am Leben. Die Update-Schleife des Kontos
         # läuft als eigene Aufgabe und startet erst nach der Anmeldung
         # (siehe start_account_services).
-        # WICHTIG: run_until_disconnected() wird als Task statt blocking aufgerufen,
-        # weil Telethon für Bot-Clients merkwürdig funktioniert.
-        bot_task = asyncio.create_task(bot_client.run_until_disconnected())
-        logger.info("Bot-Task gestartet (non-blocking)")
-
-        # Warte auf die Bot-Task (oder auf Sigterm, etc.)
-        try:
-            await bot_task
-        except asyncio.CancelledError:
-            logger.info("Bot-Task wurde abgebrochen")
-            raise
+        await bot_client.run_until_disconnected()
     finally:
         # 关闭 DBOperations
         if db_ops and hasattr(db_ops, 'close'):
