@@ -19,8 +19,10 @@ from utils.i18n import t
 
 logger = logging.getLogger(__name__)
 
-# Schnellwahl in Minuten – deckt die üblichen Fälle ohne Tipparbeit ab
-QUICK_CHOICES = [30, 60, 180, 360, 720, 1440]
+# Schnellwahl in Minuten – deckt die üblichen Fälle ohne Tipparbeit ab.
+# 3 Minuten ist bewusst dabei: damit lässt sich die Wiederholung testen,
+# ohne eine halbe Stunde zu warten.
+QUICK_CHOICES = [3, 15, 30, 60, 180, 360, 720, 1440]
 
 # Grenzen für eigene Eingaben
 MIN_MINUTES = 1
