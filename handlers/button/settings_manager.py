@@ -631,6 +631,14 @@ async def create_buttons(rule):
                 )
             ])
 
+        # Erklärung aller Schalter in Alltagssprache
+        buttons.append([
+            Button.inline(
+                t('settings.info.btn'),
+                f"settings_info:{rule.id}"
+            )
+        ])
+
         # Zurueck fuehrt immer zur Detailkarte der Weiterleitung – auch wenn die
         # Weiterleitung ueber das eigene Konto statt ueber den Bot laeuft.
         buttons.append([

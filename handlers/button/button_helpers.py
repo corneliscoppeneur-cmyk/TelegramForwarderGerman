@@ -126,6 +126,11 @@ async def create_other_settings_buttons(rule=None,rule_id=None):
             callback_data = f"{config['toggle_action']}:{rule_id}"
             buttons.append([Button.inline(display_value, callback_data)])
 
+    # Erklärung aller Schalter in Alltagssprache
+    buttons.append([
+        Button.inline(t('settings.info.btn'), f"settings_info:{rule_id}")
+    ])
+
     # 添加返回按钮
     buttons.append([
         Button.inline(t('common.btn.back'), f"rule_settings:{rule_id}"),

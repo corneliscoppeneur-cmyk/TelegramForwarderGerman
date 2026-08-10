@@ -51,6 +51,7 @@ from handlers.button.callback.paid_callback import (
     callback_paid_reset,
     callback_paid_set,
 )
+from handlers.button.callback.settings_info import callback_settings_info
 from handlers.button.account_login import (
     callback_login_start,
     callback_login_cancel,
@@ -693,6 +694,8 @@ CALLBACK_HANDLERS = {
     'paid': callback_paid,
     'paid_reset': callback_paid_reset,
     'paid_set': callback_paid_set,
+    # Erklärung der Einstellungen
+    'settings_info': callback_settings_info,
     # Einrichtungs-Assistent
     'wizard_start': callback_wizard_start,
     'wz_page': callback_wizard_page,
