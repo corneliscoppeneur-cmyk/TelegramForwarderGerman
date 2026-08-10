@@ -269,6 +269,22 @@ class MediaFilter(BaseFilter):
         scheitern wäre schlimmer als sichtbar unvollständig.
         """
         rule = context.rule
+        event = context.event
+
+        # Die Datei-Referenzen im ursprünglichen Ereignis veralten schnell –
+        # GetFile scheitert dann mit „file reference has expired". Deshalb den
+        # Beitrag frisch nachladen, und zwar mit genau dem Konto, das ihn
+        # empfangen hat (das angemeldete Admin-Konto), nicht mit dem Bot: nur
+        # dieses Konto hat Zugriff auf die bezahlten Dateien.
+        download_client = getattr(event, 'client', None) or context.client
+        try:
+            fresh = await download_client.get_messages(event.chat_id, ids=event.message.id)
+            fresh_paid = get_paid_media(fresh) if fresh else None
+            if fresh_paid:
+                paid = fresh_paid
+        except Exception as e:
+            logger.warning(f'Bezahlter Beitrag: konnte nicht neu geladen werden, nutze das Original: {e}')
+
         usable = accessible_items(paid)
         locked = locked_count(paid)
 
@@ -288,7 +304,7 @@ class MediaFilter(BaseFilter):
             return
 
         context.paid_media_stars = int(getattr(paid, 'stars_amount', 0) or 0)
-        context.paid_media_files = await download_paid(context.client, paid, TEMP_DIR)
+        context.paid_media_files = await download_paid(download_client, paid, TEMP_DIR)
 
         if not context.paid_media_files:
             logger.error('Bezahlter Beitrag: keine Datei konnte geladen werden')
