@@ -9,6 +9,12 @@ async def get_media_size(media):
         return 0
 
     try:
+        # Bezahlte Medien tragen ihre Dateien in extended_media
+        from utils.paid_media import media_size
+        from telethon.tl.types import MessageMediaPaidMedia
+        if isinstance(media, MessageMediaPaidMedia):
+            return media_size(media)
+
         # 对于所有类型的媒体，先尝试获取 document
         if hasattr(media, 'document') and media.document:
             return media.document.size

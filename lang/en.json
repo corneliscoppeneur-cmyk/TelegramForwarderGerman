@@ -553,5 +553,16 @@
   "repeat.custom.out_of_range": "<b>That doesn't fit</b>\n\nPlease pick a number between {min} and {max} minutes.",
   "repeat.alert.turned_on": "Repeat turned on",
   "repeat.alert.turned_off": "Repeat turned off",
-  "repeat.alert.interval_saved": "Now every {interval}"
+  "repeat.alert.interval_saved": "Now every {interval}",
+  "menu.btn.paid": "⭐ Paid posts",
+  "paid.text": "<b>⭐ Paid posts</b>\n\n{status}\n\nWhen a post in the source chat sits behind a paywall, the bot puts a paywall in front of it again in the target chat.\n\n<b>Important:</b> this only works if the connected account is allowed to see the post itself – so it bought it or belongs to the channel. Otherwise Telegram only hands over the blurred preview and just the text gets forwarded.\n\nTelegram also accepts paid posts in channels only, not in groups.",
+  "paid.status.same_as_original": "Currently the <b>same price as the original</b>.",
+  "paid.status.custom": "Currently <b>{stars} stars</b>.",
+  "paid.btn.set": "⭐ Set your own price",
+  "paid.btn.use_original": "↩️ Use the original's price",
+  "paid.ask": "<b>⭐ Your own price</b>\n\nSend me how many stars the post should cost in the target chat.\n\n<blockquote>Between {min} and {max} – example: 50</blockquote>",
+  "paid.invalid": "<b>That wasn't a number</b>\n\nPlease send just the number of stars, for example 50.",
+  "paid.out_of_range": "<b>That doesn't fit</b>\n\nPlease pick a number between {min} and {max} stars.",
+  "paid.alert.uses_original": "Back to the original's price",
+  "filter.paid_media_failed": "Paid post not sent: {error}"
 }

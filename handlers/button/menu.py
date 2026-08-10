@@ -154,6 +154,7 @@ def build_rule_card(session, rule_id):
             Button.inline(t('menu.btn.settings'), f'rule_settings:{rule.id}'),
             Button.inline(repeat_label, f'repeat:{rule.id}'),
         ],
+        [Button.inline(t('menu.btn.paid'), f'paid:{rule.id}')],
         [
             Button.inline(t('menu.btn.copy'), f'copy_rule:{rule.id}'),
             Button.inline(t('menu.btn.delete'), f'rule_delete_ask:{rule.id}'),

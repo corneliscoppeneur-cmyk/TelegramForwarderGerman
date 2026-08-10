@@ -3,6 +3,7 @@ import os
 import asyncio
 from utils.media import get_media_size
 from utils.constants import TEMP_DIR
+from utils.paid_media import get_paid_media, accessible_items, locked_count, download as download_paid
 from filters.base_filter import BaseFilter
 from utils.media import get_max_media_size
 from enums.enums import PreviewMode
@@ -159,6 +160,13 @@ class MediaFilter(BaseFilter):
             ])
         )
         
+        # Bezahlter Beitrag (Telegram Stars): eigener Weg, die Dateien stecken
+        # in extended_media und tauchen nicht als photo/document auf.
+        paid = get_paid_media(event.message)
+        if paid:
+            await self._process_paid_media(context, paid)
+            return True
+
         # 检查是否有实际媒体
         has_media = (
             event.message.media and
@@ -253,6 +261,39 @@ class MediaFilter(BaseFilter):
             context.is_pure_link_preview = True
             logger.info('这是一条纯链接预览消息')
             
+    async def _process_paid_media(self, context, paid):
+        """Bezahlten Beitrag vorbereiten.
+
+        Ohne Kauf liefert Telegram nur eine verpixelte Vorschau. Dann wird der
+        Textteil weitergeleitet und der Grund protokolliert – heimlich
+        scheitern wäre schlimmer als sichtbar unvollständig.
+        """
+        rule = context.rule
+        usable = accessible_items(paid)
+        locked = locked_count(paid)
+
+        if not usable:
+            logger.warning(
+                f'Bezahlter Beitrag: keine der {locked} Datei(en) ist zugänglich. '
+                f'Das angemeldete Konto hat den Beitrag nicht gekauft und ist auch '
+                f'nicht Teil des Kanals – nur der Text wird weitergeleitet.'
+            )
+            context.paid_media_locked = True
+            return
+
+        if locked:
+            logger.warning(f'Bezahlter Beitrag: {locked} von {len(paid.extended_media)} Datei(en) nicht zugänglich')
+
+        if rule.only_rss:
+            return
+
+        context.paid_media_stars = int(getattr(paid, 'stars_amount', 0) or 0)
+        context.paid_media_files = await download_paid(context.client, paid, TEMP_DIR)
+
+        if not context.paid_media_files:
+            logger.error('Bezahlter Beitrag: keine Datei konnte geladen werden')
+            context.paid_media_locked = True
+
     async def _is_media_type_blocked(self, media, media_types):
         """
         检查媒体类型是否被屏蔽

@@ -553,5 +553,16 @@
   "repeat.custom.out_of_range": "<b>超出范围</b>\n\n请填写 {min} 到 {max} 之间的分钟数。",
   "repeat.alert.turned_on": "已开启重复发送",
   "repeat.alert.turned_off": "已关闭重复发送",
-  "repeat.alert.interval_saved": "现在每 {interval}"
+  "repeat.alert.interval_saved": "现在每 {interval}",
+  "menu.btn.paid": "⭐ 付费内容",
+  "paid.text": "<b>⭐ 付费内容</b>\n\n{status}\n\n当来源聊天中的内容位于付费墙之后时，机器人会在目标聊天中重新加上付费墙。\n\n<b>重要：</b>这只在已连接的账号本身有权查看该内容时才有效，即已购买或属于该频道。否则 Telegram 只会给出模糊预览，届时仅转发文字部分。\n\n另外，Telegram 只允许在频道中发布付费内容，群组不支持。",
+  "paid.status.same_as_original": "当前使用<b>与原文相同的价格</b>。",
+  "paid.status.custom": "当前为 <b>{stars} 星</b>。",
+  "paid.btn.set": "⭐ 设置自定义价格",
+  "paid.btn.use_original": "↩️ 使用原文价格",
+  "paid.ask": "<b>⭐ 自定义价格</b>\n\n请告诉我该内容在目标聊天中需要多少星。\n\n<blockquote>{min} 到 {max} 之间——示例：50</blockquote>",
+  "paid.invalid": "<b>这不是数字</b>\n\n请只发送星数，例如 50。",
+  "paid.out_of_range": "<b>超出范围</b>\n\n请填写 {min} 到 {max} 之间的星数。",
+  "paid.alert.uses_original": "已恢复为原文价格",
+  "filter.paid_media_failed": "付费内容发送失败：{error}"
 }

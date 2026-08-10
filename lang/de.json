@@ -553,5 +553,16 @@
   "repeat.custom.out_of_range": "<b>Das passt nicht</b>\n\nBitte eine Zahl zwischen {min} und {max} Minuten.",
   "repeat.alert.turned_on": "Wiederholung eingeschaltet",
   "repeat.alert.turned_off": "Wiederholung ausgeschaltet",
-  "repeat.alert.interval_saved": "Jetzt alle {interval}"
+  "repeat.alert.interval_saved": "Jetzt alle {interval}",
+  "menu.btn.paid": "⭐ Bezahlte Beiträge",
+  "paid.text": "<b>⭐ Bezahlte Beiträge</b>\n\n{status}\n\nWenn im Quellchat ein Beitrag hinter einer Bezahlschranke steht, setzt der Bot im Zielchat wieder eine Bezahlschranke davor.\n\n<b>Wichtig:</b> Das klappt nur, wenn das verbundene Konto den Beitrag selbst sehen darf – also gekauft hat oder zum Kanal gehört. Sonst kommt bei Telegram nur die verpixelte Vorschau an und es wird lediglich der Text weitergeleitet.\n\nBezahlte Beiträge nimmt Telegram außerdem nur in Kanälen an, nicht in Gruppen.",
+  "paid.status.same_as_original": "Zurzeit gilt der <b>gleiche Preis wie im Original</b>.",
+  "paid.status.custom": "Zurzeit <b>{stars} Sterne</b>.",
+  "paid.btn.set": "⭐ Eigenen Preis festlegen",
+  "paid.btn.use_original": "↩️ Preis des Originals nehmen",
+  "paid.ask": "<b>⭐ Eigener Preis</b>\n\nSchick mir, wie viele Sterne der Beitrag im Zielchat kosten soll.\n\n<blockquote>Zwischen {min} und {max} – Beispiel: 50</blockquote>",
+  "paid.invalid": "<b>Das war keine Zahl</b>\n\nSchick mir bitte nur die Anzahl der Sterne, zum Beispiel 50.",
+  "paid.out_of_range": "<b>Das passt nicht</b>\n\nBitte eine Zahl zwischen {min} und {max} Sternen.",
+  "paid.alert.uses_original": "Es gilt wieder der Preis des Originals",
+  "filter.paid_media_failed": "Bezahlter Beitrag nicht gesendet: {error}"
 }

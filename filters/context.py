@@ -63,6 +63,11 @@ class MessageContext:
         
         # 评论区链接
         self.comment_link = None
+
+        # Bezahlte Medien (Telegram Stars)
+        self.paid_media_files = []      # [(pfad, innere_media)]
+        self.paid_media_stars = 0       # Preis des Originals
+        self.paid_media_locked = False  # Dateien liegen nur als Vorschau vor
         
     def clone(self):
         """创建上下文的副本"""

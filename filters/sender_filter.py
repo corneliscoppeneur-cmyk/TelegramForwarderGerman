@@ -4,6 +4,7 @@ import os
 from filters.base_filter import BaseFilter
 from enums.enums import PreviewMode
 from telethon.errors import FloodWaitError
+from utils import paid_media
 
 logger = logging.getLogger(__name__)
 
@@ -71,8 +72,12 @@ class SenderFilter(BaseFilter):
         logger.info(f'使用消息格式: {parse_mode}')
         
         try:
+            # Bezahlter Beitrag: eigener Weg, damit die Bezahlschranke erhalten bleibt
+            if context.paid_media_files:
+                logger.info('准备发送付费媒体')
+                await self._send_paid_media(context, entity or target_chat_id, parse_mode)
             # 处理媒体组消息
-            if context.is_media_group or (context.media_group_messages and context.skipped_media):
+            elif context.is_media_group or (context.media_group_messages and context.skipped_media):
                 logger.info(f'准备发送媒体组消息')
                 await self._send_media_group(context, target_chat_id, parse_mode)
             # 处理单条媒体消息
@@ -295,4 +300,38 @@ class SenderFilter(BaseFilter):
             buttons=context.buttons
         )
         context.forwarded_messages = [sent]
-        logger.info(f'{"带预览的" if link_preview else "无预览的"}文本消息已发送') 
+        logger.info(f'{"带预览的" if link_preview else "无预览的"}文本消息已发送')
+
+    async def _send_paid_media(self, context, entity, parse_mode):
+        """Bezahlten Beitrag weitergeben – im Ziel wieder hinter der Bezahlschranke."""
+        rule = context.rule
+        client = context.client
+
+        # Eigener Preis der Weiterleitung schlägt den Preis des Originals
+        stars = rule.paid_media_stars or context.paid_media_stars
+        if not stars:
+            logger.warning('Bezahlter Beitrag ohne Preis – es wird 1 Stern angesetzt')
+            stars = 1
+
+        caption = (
+            context.sender_info +
+            context.message_text +
+            context.time_info +
+            context.original_link
+        )
+
+        try:
+            sent = await paid_media.send(
+                client, entity, context.paid_media_files, caption, parse_mode, stars
+            )
+            if sent:
+                context.forwarded_messages = [sent]
+            logger.info(f'付费媒体已发送，价格 {stars} 星')
+        except Exception as e:
+            # Bezahlte Beiträge nimmt Telegram nur in Kanälen an
+            logger.error(f'Bezahlter Beitrag konnte nicht gesendet werden: {e}')
+            context.errors.append(t('filter.paid_media_failed', error=str(e)))
+            raise
+        finally:
+            if not rule.enable_push:
+                paid_media.cleanup(context.paid_media_files)

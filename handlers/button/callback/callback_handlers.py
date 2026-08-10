@@ -46,6 +46,11 @@ from handlers.button.callback.repeat_callback import (
     callback_repeat_set,
     callback_repeat_custom,
 )
+from handlers.button.callback.paid_callback import (
+    callback_paid,
+    callback_paid_reset,
+    callback_paid_set,
+)
 from handlers.button.account_login import (
     callback_login_start,
     callback_login_cancel,
@@ -684,6 +689,10 @@ CALLBACK_HANDLERS = {
     'repeat_toggle': callback_repeat_toggle,
     'repeat_set': callback_repeat_set,
     'repeat_custom': callback_repeat_custom,
+    # Bezahlte Beiträge
+    'paid': callback_paid,
+    'paid_reset': callback_paid_reset,
+    'paid_set': callback_paid_set,
     # Einrichtungs-Assistent
     'wizard_start': callback_wizard_start,
     'wz_page': callback_wizard_page,
