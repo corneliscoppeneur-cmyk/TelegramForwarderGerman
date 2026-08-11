@@ -52,6 +52,14 @@ from handlers.button.callback.paid_callback import (
     callback_paid_set,
 )
 from handlers.button.callback.settings_info import callback_settings_info
+from handlers.button.callback.edit_channel_callback import (
+    callback_edit_source,
+    callback_edit_target,
+    callback_edit_page,
+    callback_edit_pick,
+    callback_edit_search,
+    callback_edit_link,
+)
 from handlers.button.account_login import (
     callback_login_start,
     callback_login_cancel,
@@ -696,6 +704,13 @@ CALLBACK_HANDLERS = {
     'paid_set': callback_paid_set,
     # Erklärung der Einstellungen
     'settings_info': callback_settings_info,
+    # Quelle/Ziel einer Weiterleitung ändern
+    'edit_src': callback_edit_source,
+    'edit_dst': callback_edit_target,
+    'edit_page': callback_edit_page,
+    'edit_pick': callback_edit_pick,
+    'edit_search': callback_edit_search,
+    'edit_link': callback_edit_link,
     # Einrichtungs-Assistent
     'wizard_start': callback_wizard_start,
     'wz_page': callback_wizard_page,

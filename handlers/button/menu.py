@@ -156,6 +156,10 @@ def build_rule_card(session, rule_id):
         ],
         [Button.inline(t('menu.btn.paid'), f'paid:{rule.id}')],
         [
+            Button.inline(t('menu.btn.edit_source'), f'edit_src:{rule.id}'),
+            Button.inline(t('menu.btn.edit_target'), f'edit_dst:{rule.id}'),
+        ],
+        [
             Button.inline(t('menu.btn.copy'), f'copy_rule:{rule.id}'),
             Button.inline(t('menu.btn.delete'), f'rule_delete_ask:{rule.id}'),
         ],

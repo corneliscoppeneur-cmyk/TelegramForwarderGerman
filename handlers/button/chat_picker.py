@@ -82,27 +82,37 @@ def filter_chats(items, query):
     return [i for i in items if query in (i['name'] or '').lower()]
 
 
-def build_picker(items, page, role, header_text, query=None):
+# Callback-Präfixe des Einrichtungs-Assistenten – Standard für build_picker
+WIZARD_PREFIXES = {'sel': 'wz_sel', 'page': 'wz_page', 'search': 'wz_search', 'link': 'wz_link'}
+
+
+def build_picker(items, page, role, header_text, query=None,
+                 prefixes=None, cancel_data='menu_main'):
     """Auswahlliste aufbauen.
 
     Args:
         items: gefilterte Chatliste
         page: Seitenzahl ab 0
-        role: ``'s'`` (Quelle) oder ``'t'`` (Ziel) – steckt in den Callback-Daten
+        role: Kontext-Token in den Callback-Daten. Beim Assistenten ``'s'``/``'t'``,
+            beim Bearbeiten ``'<rule_id>:s'`` bzw. ``'<rule_id>:t'``.
         header_text: fertiger Text über der Liste
         query: aktiver Suchbegriff (nur zur Anzeige)
+        prefixes: Callback-Präfixe (``sel``/``page``/``search``/``link``);
+            Standard sind die des Assistenten.
+        cancel_data: Callback-Daten des Abbrechen-Knopfs.
 
     Returns:
         (text, buttons)
     """
+    p = prefixes or WIZARD_PREFIXES
     total = len(items)
 
     if total == 0:
         text = t('wizard.no_chats_found', query=escape(query or ''))
         buttons = [
-            [Button.inline(t('wizard.btn.search_again'), f'wz_search:{role}')],
-            [Button.inline(t('wizard.btn.paste_link'), f'wz_link:{role}')],
-            [Button.inline(t('menu.btn.cancel'), 'menu_main')],
+            [Button.inline(t('wizard.btn.search_again'), f'{p["search"]}:{role}')],
+            [Button.inline(t('wizard.btn.paste_link'), f'{p["link"]}:{role}')],
+            [Button.inline(t('menu.btn.cancel'), cancel_data)],
         ]
         return text, buttons
 
@@ -112,23 +122,23 @@ def build_picker(items, page, role, header_text, query=None):
     buttons = []
     for item in items[page * CHATS_PER_PAGE:(page + 1) * CHATS_PER_PAGE]:
         buttons.append([
-            Button.inline(shorten(item['name'], 28), f'wz_sel:{role}:{item["id"]}')
+            Button.inline(shorten(item['name'], 28), f'{p["sel"]}:{role}:{item["id"]}')
         ])
 
     if total_pages > 1:
         nav = []
         if page > 0:
-            nav.append(Button.inline(t('common.page.prev'), f'wz_page:{role}:{page - 1}'))
+            nav.append(Button.inline(t('common.page.prev'), f'{p["page"]}:{role}:{page - 1}'))
         nav.append(Button.inline(f'{page + 1}/{total_pages}', 'noop'))
         if page < total_pages - 1:
-            nav.append(Button.inline(t('common.page.next'), f'wz_page:{role}:{page + 1}'))
+            nav.append(Button.inline(t('common.page.next'), f'{p["page"]}:{role}:{page + 1}'))
         buttons.append(nav)
 
     buttons.append([
-        Button.inline(t('wizard.btn.search'), f'wz_search:{role}'),
-        Button.inline(t('wizard.btn.paste_link'), f'wz_link:{role}'),
+        Button.inline(t('wizard.btn.search'), f'{p["search"]}:{role}'),
+        Button.inline(t('wizard.btn.paste_link'), f'{p["link"]}:{role}'),
     ])
-    buttons.append([Button.inline(t('menu.btn.cancel'), 'menu_main')])
+    buttons.append([Button.inline(t('menu.btn.cancel'), cancel_data)])
 
     if query:
         text = header_text + '\n\n' + t('wizard.search_active', query=escape(query))

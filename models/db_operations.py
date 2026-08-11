@@ -1236,3 +1236,44 @@ def create_forward_rule(session, source_entity, target_entity):
             ForwardRule.target_chat_id == target_chat_db.id
         ).first()
         return existing, False
+
+
+def change_rule_channel(session, rule_id, role, entity):
+    """Quelle (``role='s'``) oder Ziel (``role='t'``) einer Weiterleitung ändern.
+
+    Returns:
+        (rule, status) mit status aus:
+        ``'ok'`` – geändert, ``'unchanged'`` – neuer Kanal = alter Kanal,
+        ``'duplicate'`` – es gibt schon eine Weiterleitung mit dieser
+        Quelle+Ziel, ``'not_found'`` – Weiterleitung existiert nicht.
+    """
+    rule = session.query(ForwardRule).get(int(rule_id))
+    if not rule:
+        return None, 'not_found'
+
+    chat = _get_or_create_chat(session, entity)
+
+    if role == 's':
+        new_source, new_target = chat.id, rule.target_chat_id
+    else:
+        new_source, new_target = rule.source_chat_id, chat.id
+
+    if new_source == rule.source_chat_id and new_target == rule.target_chat_id:
+        return rule, 'unchanged'
+
+    clash = session.query(ForwardRule).filter(
+        ForwardRule.source_chat_id == new_source,
+        ForwardRule.target_chat_id == new_target,
+        ForwardRule.id != rule.id,
+    ).first()
+    if clash:
+        return rule, 'duplicate'
+
+    rule.source_chat_id = new_source
+    rule.target_chat_id = new_target
+    try:
+        session.commit()
+        return rule, 'ok'
+    except IntegrityError:
+        session.rollback()
+        return rule, 'duplicate'
