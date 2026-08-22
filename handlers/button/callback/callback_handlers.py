@@ -52,6 +52,11 @@ from handlers.button.callback.paid_callback import (
     callback_paid_set,
 )
 from handlers.button.callback.settings_info import callback_settings_info
+from handlers.button.callback.sales_callback import (
+    callback_sales,
+    callback_sales_toggle,
+    callback_sales_edit,
+)
 from handlers.button.callback.edit_channel_callback import (
     callback_edit_source,
     callback_edit_target,
@@ -704,6 +709,10 @@ CALLBACK_HANDLERS = {
     'paid_set': callback_paid_set,
     # Erklärung der Einstellungen
     'settings_info': callback_settings_info,
+    # Vermietung / Werbetext
+    'sales': callback_sales,
+    'sales_toggle': callback_sales_toggle,
+    'sales_edit': callback_sales_edit,
     # Quelle/Ziel einer Weiterleitung ändern
     'edit_src': callback_edit_source,
     'edit_dst': callback_edit_target,

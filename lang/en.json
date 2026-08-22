@@ -575,5 +575,18 @@
   "edit.alert.target_changed": "Target changed to {name}",
   "edit.alert.unchanged": "That's already the selected channel",
   "edit.alert.duplicate": "A forward with this source and target already exists. Not changed.",
-  "edit.alert.chat_not_found": "I can't find this channel anymore – please reload the list."
+  "edit.alert.chat_not_found": "I can't find this channel anymore – please reload the list.",
+  "menu.btn.sales": "🪧 Renting",
+  "sales.default": "👋 <b>Hello!</b>\n\nYou can <b>rent</b> this forwarding bot and have your messages forwarded automatically from one channel or group to another.\n\n💶 From just <b>10 € per month</b>.\n\nMessage the operator to get started.",
+  "sales.status.on": "Currently <b>on</b> – anyone who writes to you gets this message automatically (at most once every 6 hours per person).",
+  "sales.status.off": "Currently <b>off</b> – strangers get no reply.",
+  "sales.screen.text": "<b>🪧 Renting</b>\n\n{status}\n\nThis is what strangers see:\n\n{preview}",
+  "sales.screen.text_no_preview": "<b>🪧 Renting</b>\n\n{status}\n\n⚠️ Your text contains invalid formatting and can't be shown. Please edit it.",
+  "sales.btn.turn_on": "▶️ Turn on",
+  "sales.btn.turn_off": "⏸ Turn off",
+  "sales.btn.edit": "✏️ Change text",
+  "sales.edit.ask": "<b>✏️ Change the renting message</b>\n\nSend me the text strangers should receive. Formatting with &lt;b&gt;bold&lt;/b&gt; etc. is allowed.",
+  "sales.edit.empty": "<b>Empty text</b>\n\nPlease send me some text.",
+  "sales.alert.turned_on": "Auto-reply turned on",
+  "sales.alert.turned_off": "Auto-reply turned off"
 }

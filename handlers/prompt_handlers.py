@@ -36,6 +36,11 @@ async def handle_prompt_setting(event, client, sender_id, chat_id, current_state
         from handlers.button.callback.wizard_callback import apply_text_input
         return await apply_text_input(event, client, sender_id, chat_id, current_state, message)
 
+    if current_state.startswith("sales_text:"):
+        # Vermietungs-/Werbetext ändern
+        from handlers.button.callback.sales_callback import apply_text_input as apply_sales_input
+        return await apply_sales_input(event, client, sender_id, chat_id, current_state, message)
+
     if current_state.startswith(("edit_search:", "edit_link:")):
         # Quelle/Ziel einer Weiterleitung per Suche oder Link ändern
         from handlers.button.callback.edit_channel_callback import apply_text_input as apply_edit_input

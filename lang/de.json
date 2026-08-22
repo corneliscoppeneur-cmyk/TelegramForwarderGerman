@@ -575,5 +575,18 @@
   "edit.alert.target_changed": "Ziel geändert auf {name}",
   "edit.alert.unchanged": "Das ist bereits der eingestellte Kanal",
   "edit.alert.duplicate": "Es gibt bereits eine Weiterleitung mit dieser Quelle und diesem Ziel. Nicht geändert.",
-  "edit.alert.chat_not_found": "Diesen Kanal finde ich nicht mehr – bitte die Liste neu laden."
+  "edit.alert.chat_not_found": "Diesen Kanal finde ich nicht mehr – bitte die Liste neu laden.",
+  "menu.btn.sales": "🪧 Vermietung",
+  "sales.default": "👋 <b>Hallo!</b>\n\nDu kannst diesen Weiterleitungs-Bot <b>mieten</b> und deine Nachrichten automatisch von einem Kanal oder einer Gruppe in eine andere weiterleiten lassen.\n\n💶 Schon ab <b>10 € im Monat</b>.\n\nSchreib dem Betreiber, um loszulegen.",
+  "sales.status.on": "Zurzeit <b>an</b> – wer dir schreibt, bekommt automatisch diese Nachricht (höchstens alle 6 Stunden pro Person).",
+  "sales.status.off": "Zurzeit <b>aus</b> – fremde Nutzer bekommen keine Antwort.",
+  "sales.screen.text": "<b>🪧 Vermietung</b>\n\n{status}\n\nSo sieht deine Nachricht an fremde Nutzer aus:\n\n{preview}",
+  "sales.screen.text_no_preview": "<b>🪧 Vermietung</b>\n\n{status}\n\n⚠️ Dein Text enthält ungültige Formatierung und kann nicht angezeigt werden. Bitte bearbeite ihn.",
+  "sales.btn.turn_on": "▶️ Einschalten",
+  "sales.btn.turn_off": "⏸ Ausschalten",
+  "sales.btn.edit": "✏️ Text ändern",
+  "sales.edit.ask": "<b>✏️ Vermietungstext ändern</b>\n\nSchick mir den Text, den fremde Nutzer bekommen sollen. Formatierung mit &lt;b&gt;fett&lt;/b&gt; usw. ist möglich.",
+  "sales.edit.empty": "<b>Leerer Text</b>\n\nBitte schick mir einen Text.",
+  "sales.alert.turned_on": "Automatische Antwort eingeschaltet",
+  "sales.alert.turned_off": "Automatische Antwort ausgeschaltet"
 }

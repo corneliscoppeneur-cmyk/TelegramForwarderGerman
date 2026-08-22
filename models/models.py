@@ -237,8 +237,22 @@ class User(Base):
     __tablename__ = 'users'
 
     id = Column(Integer, primary_key=True)
-    username = Column(String, nullable=False)  
-    password = Column(String, nullable=False)  
+    username = Column(String, nullable=False)
+    password = Column(String, nullable=False)
+
+
+class BotConfig(Base):
+    """Einfacher Schlüssel-Wert-Speicher für globale Bot-Einstellungen.
+
+    Wird u. a. für den Vermietungs-/Werbetext genutzt, den der Bot an fremde
+    Nutzer schickt. So lässt sich der Text im Bot selbst ändern – ohne .env
+    und ohne Neustart.
+    """
+    __tablename__ = 'bot_config'
+
+    key = Column(String, primary_key=True)
+    value = Column(String, nullable=True)
+
 
 def migrate_db(engine):
     """数据库迁移函数，确保新字段的添加"""

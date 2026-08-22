@@ -575,5 +575,18 @@
   "edit.alert.target_changed": "目标已改为 {name}",
   "edit.alert.unchanged": "这已经是当前所选频道",
   "edit.alert.duplicate": "已存在具有相同来源和目标的转发。未更改。",
-  "edit.alert.chat_not_found": "找不到该频道了，请重新加载列表。"
+  "edit.alert.chat_not_found": "找不到该频道了，请重新加载列表。",
+  "menu.btn.sales": "🪧 出租",
+  "sales.default": "👋 <b>你好！</b>\n\n你可以<b>租用</b>这个转发机器人，把你的消息从一个频道或群组自动转发到另一个。\n\n💶 每月仅需 <b>10 欧元</b>起。\n\n联系运营者即可开始。",
+  "sales.status.on": "当前<b>已开启</b>——任何给你发消息的人都会自动收到这条消息（每人最多每 6 小时一次）。",
+  "sales.status.off": "当前<b>已关闭</b>——陌生人不会收到回复。",
+  "sales.screen.text": "<b>🪧 出租</b>\n\n{status}\n\n陌生人会看到：\n\n{preview}",
+  "sales.screen.text_no_preview": "<b>🪧 出租</b>\n\n{status}\n\n⚠️ 你的文本包含无效格式，无法显示。请编辑。",
+  "sales.btn.turn_on": "▶️ 开启",
+  "sales.btn.turn_off": "⏸ 关闭",
+  "sales.btn.edit": "✏️ 修改文本",
+  "sales.edit.ask": "<b>✏️ 修改出租文案</b>\n\n请发送陌生人应收到的文本。可使用 &lt;b&gt;加粗&lt;/b&gt; 等格式。",
+  "sales.edit.empty": "<b>文本为空</b>\n\n请发送一些文本。",
+  "sales.alert.turned_on": "已开启自动回复",
+  "sales.alert.turned_off": "已关闭自动回复"
 }

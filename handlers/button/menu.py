@@ -60,6 +60,7 @@ def build_main_menu(connected=True):
         [Button.inline(t('menu.btn.new_forward'), 'wizard_start')],
         [Button.inline(t('menu.btn.my_forwards'), 'menu_rules:0')],
         [Button.inline(t('menu.btn.how_it_works'), 'menu_help')],
+        [Button.inline(t('menu.btn.sales'), 'sales')],
     ]
 
 
