@@ -1,4 +1,6 @@
 import logging
+from handlers.subscription import is_active
+from utils.common import get_user_id
 from filters.filter_chain import FilterChain
 from filters.keyword_filter import KeywordFilter
 from filters.replace_filter import ReplaceFilter
@@ -31,7 +33,16 @@ async def process_forward_rule(client, event, chat_id, rule):
         bool: 处理是否成功
     """
     logger.info(f'使用过滤器链处理规则 ID: {rule.id}')
-    
+
+    # Abo abgelaufen? Weiterleitung pausieren.
+    try:
+        owner_id = await get_user_id()
+        if not is_active(owner_id):
+            logger.info(f'Abo abgelaufen für {owner_id} – Regel {rule.id} pausiert')
+            return False
+    except Exception as e:
+        logger.error(f'Abo-Prüfung fehlgeschlagen, lasse Weiterleitung zu: {e}')
+
     # 创建过滤器链
     filter_chain = FilterChain()
 

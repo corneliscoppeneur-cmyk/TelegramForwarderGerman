@@ -14,6 +14,7 @@ from models.db_operations import DBOperations
 from scheduler.summary_scheduler import SummaryScheduler
 from scheduler.chat_updater import ChatUpdater
 from scheduler.repeat_scheduler import RepeatScheduler
+from scheduler.subscription_scheduler import SubscriptionScheduler
 from handlers.bot_handler import send_welcome_message
 from rss.main import app as rss_app
 from utils.log_config import setup_logging
@@ -44,6 +45,7 @@ scheduler = None
 chat_updater = None
 user_updates_task = None
 repeat_scheduler = None
+subscription_scheduler = None
 
 
 async def init_db_ops():
@@ -154,9 +156,24 @@ async def start_clients():
         await register_bot_commands(bot_client)
 
         # Wiederholung läuft über den Bot und braucht daher kein angemeldetes Konto
-        global repeat_scheduler
+        global repeat_scheduler, subscription_scheduler
         repeat_scheduler = RepeatScheduler(user_client, bot_client)
         await repeat_scheduler.start()
+
+        # Abo-Erinnerungen: läuft über den Bot, unabhängig vom Kundenkonto
+        subscription_scheduler = SubscriptionScheduler(bot_client)
+        await subscription_scheduler.start()
+
+        # Testphase für den Kunden dieses Containers sicherstellen (No-op bei Admin
+        # oder wenn bereits ein Abo-Eintrag existiert). Ohne das würde ein
+        # bestehender Container nach dem Update sofort blockiert werden, weil
+        # ohne Eintrag is_active() False liefert.
+        try:
+            from handlers.subscription import ensure_trial
+            from utils.common import get_user_id
+            ensure_trial(await get_user_id())
+        except Exception as e:
+            logger.error(f'Testphase konnte beim Start nicht angelegt werden: {e}')
 
         # Zeitgesteuerte Dienste nur mit angemeldetem Konto
         await start_account_services()
@@ -201,6 +218,9 @@ async def start_clients():
         # Wiederholung beenden
         if repeat_scheduler:
             repeat_scheduler.stop()
+        # Abo-Erinnerungen beenden
+        if subscription_scheduler:
+            subscription_scheduler.stop()
         # 如果 RSS 服务在运行，停止它
         if 'rss_process' in locals() and rss_process.is_alive():
             rss_process.terminate()

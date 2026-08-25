@@ -162,7 +162,7 @@ async def send_welcome_message(client):
             WELCOME_TEXT if connected else t('login.needed.text'),
             parse_mode='html',
             link_preview=True,
-            buttons=build_main_menu(connected)
+            buttons=build_main_menu(connected, user_id)
         )
         logger.info("已发送欢迎消息")
     except Exception as e:

@@ -2,7 +2,8 @@ from models.models import ForwardMode
 import re
 import logging
 import asyncio
-from utils.common import check_keywords, get_sender_info
+from utils.common import check_keywords, get_sender_info, get_user_id
+from handlers.subscription import is_active
 
 
 logger = logging.getLogger(__name__)
@@ -10,10 +11,19 @@ logger = logging.getLogger(__name__)
 async def process_forward_rule(client, event, chat_id, rule):
     """处理转发规则（用户模式）"""
 
-    
+
     if not rule.enable_rule:
         logger.info(f'规则 ID: {rule.id} 已禁用，跳过处理')
         return
+
+    # Abo abgelaufen? Dann Weiterleitung pausieren.
+    try:
+        owner_id = await get_user_id()
+        if not is_active(owner_id):
+            logger.info(f'Abo abgelaufen für {owner_id} – Regel {rule.id} pausiert')
+            return
+    except Exception as e:
+        logger.error(f'Abo-Prüfung fehlgeschlagen, lasse Weiterleitung zu: {e}')
     
     message_text = event.message.text or ''
     check_message_text = message_text

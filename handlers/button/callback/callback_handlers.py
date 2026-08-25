@@ -70,6 +70,10 @@ from handlers.button.account_login import (
     callback_login_cancel,
     callback_login_resend,
 )
+from handlers.button.payment import (
+    callback_billing,
+    callback_buy,
+)
 import logging
 from utils.i18n import t
 import aiohttp
@@ -748,6 +752,9 @@ CALLBACK_HANDLERS = {
     'login_start': callback_login_start,
     'login_cancel': callback_login_cancel,
     'login_resend': callback_login_resend,
+    # Abo / Zahlung
+    'sub_billing': callback_billing,
+    'sub_buy': callback_buy,
     'toggle_current': callback_toggle_current,
     'switch': callback_switch,
     'settings': callback_settings,

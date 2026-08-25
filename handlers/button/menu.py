@@ -16,6 +16,7 @@ from telethon import Button
 
 from enums.enums import ForwardMode
 from models.models import ForwardRule, Keyword, ReplaceRule
+from handlers.subscription import is_admin_user
 from utils.i18n import t
 
 logger = logging.getLogger(__name__)
@@ -44,11 +45,12 @@ def main_menu_text(connected=True):
     return t('menu.main.text')
 
 
-def build_main_menu(connected=True):
+def build_main_menu(connected=True, user_id=None):
     """Buttons des Hauptmenüs.
 
     Ohne verbundenes Telegram-Konto führt der einzige Weg über die Anmeldung –
-    ohne Konto kann der Bot keine Nachrichten mitlesen.
+    ohne Konto kann der Bot keine Nachrichten mitlesen. Der Abo-Button
+    erscheint nur für Kunden (nicht für den Admin).
     """
     if not connected:
         return [
@@ -56,12 +58,15 @@ def build_main_menu(connected=True):
             [Button.inline(t('menu.btn.how_it_works'), 'menu_help')],
         ]
 
-    return [
+    buttons = [
         [Button.inline(t('menu.btn.new_forward'), 'wizard_start')],
         [Button.inline(t('menu.btn.my_forwards'), 'menu_rules:0')],
         [Button.inline(t('menu.btn.how_it_works'), 'menu_help')],
         [Button.inline(t('menu.btn.sales'), 'sales')],
     ]
+    if user_id is not None and not is_admin_user(user_id):
+        buttons.append([Button.inline(t('menu.btn.billing'), 'sub_billing')])
+    return buttons
 
 
 def describe_mode(rule):

@@ -722,6 +722,13 @@ async def handle_start_command(event):
     connected = await is_connected()
     welcome_text = t("cmd.start.text", version=VERSION) if connected else t('login.needed.text')
 
+    # Testphase beim ersten Kontakt anlegen (nur für Kunden, nicht Admin)
+    try:
+        from handlers.subscription import ensure_trial
+        ensure_trial(event.sender_id)
+    except Exception as e:
+        logger.error(f'Testphase konnte nicht angelegt werden: {e}')
+
     await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
     # Startnachricht bleibt stehen (-1): sie trägt das Hauptmenü.
     await reply_and_delete(
@@ -730,7 +737,7 @@ async def handle_start_command(event):
         delete_after_seconds=-1,
         parse_mode='html',
         link_preview=False,
-        buttons=build_main_menu(connected),
+        buttons=build_main_menu(connected, event.sender_id),
     )
 
 async def handle_help_command(event, command):
@@ -745,7 +752,7 @@ async def handle_help_command(event, command):
         delete_after_seconds=-1,
         parse_mode='html',
         link_preview=False,
-        buttons=build_main_menu(),
+        buttons=build_main_menu(user_id=event.sender_id),
     )
 
 async def handle_export_keyword_command(event, command):

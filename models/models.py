@@ -254,6 +254,22 @@ class BotConfig(Base):
     value = Column(String, nullable=True)
 
 
+class Subscription(Base):
+    """Abo-Status für den Kunden dieses Containers.
+
+    Ein Container bedient einen Kunden (USER_ID aus .env). Diese Tabelle
+    speichert dessen Testphase und bezahlten Zeitraum. Zahlung läuft über
+    Telegram Stars, siehe handlers/button/payment.py.
+    """
+    __tablename__ = 'subscription'
+
+    telegram_user_id = Column(Integer, primary_key=True)
+    trial_started_at = Column(String, nullable=True)   # ISO-Datum: erster Kontakt
+    paid_until = Column(String, nullable=True)         # ISO-Datum: bezahlt bis
+    last_reminder = Column(String, nullable=True)      # '3d' | '1d' | 'expired' | None
+    total_stars_paid = Column(Integer, default=0)
+
+
 def migrate_db(engine):
     """数据库迁移函数，确保新字段的添加"""
     inspector = inspect(engine)
@@ -271,6 +287,11 @@ def migrate_db(engine):
             if 'rule_syncs' not in existing_tables:
                 logging.info("创建rule_syncs表...")
                 RuleSync.__table__.create(engine)
+
+            # Abo-Tabelle für den Kunden dieses Containers
+            if 'subscription' not in existing_tables:
+                logging.info("Erstelle subscription-Tabelle...")
+                Subscription.__table__.create(engine)
 
 
             # 如果users表不存在，创建表

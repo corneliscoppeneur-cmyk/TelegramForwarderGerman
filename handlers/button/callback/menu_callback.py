@@ -34,7 +34,7 @@ async def _safe_edit(message, text, buttons):
 async def callback_menu_main(event, rule_id, session, message, data):
     """Hauptmenü anzeigen."""
     connected = await is_connected()
-    await _safe_edit(message, main_menu_text(connected), build_main_menu(connected))
+    await _safe_edit(message, main_menu_text(connected), build_main_menu(connected, event.sender_id))
     await event.answer()
 
 

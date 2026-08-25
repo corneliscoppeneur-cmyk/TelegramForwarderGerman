@@ -68,6 +68,25 @@ async def setup_listeners(user_client, bot_client):
     # 注册机器人回调处理器
     bot_client.add_event_handler(bot_handler.callback_handler)
 
+    # Zahlungs-Events (Telegram Stars): PreCheckout und erfolgreiche Zahlung
+    from handlers.button.payment import on_pre_checkout, on_successful_payment
+    from telethon.tl.types import (
+        MessageActionPaymentSentMe,
+        UpdateBotPrecheckoutQuery,
+    )
+
+    @bot_client.on(events.Raw(types=UpdateBotPrecheckoutQuery))
+    async def _pre_checkout(update):
+        await on_pre_checkout(update)
+
+    def _is_payment(e):
+        msg = getattr(e, 'message', None)
+        return isinstance(getattr(msg, 'action', None), MessageActionPaymentSentMe)
+
+    @bot_client.on(events.NewMessage(func=_is_payment))
+    async def _payment_done(event):
+        await on_successful_payment(event)
+
 async def handle_user_message(event, user_client, bot_client):
     """处理用户客户端收到的消息"""
     # logger.info("handle_user_message:开始处理用户消息")
