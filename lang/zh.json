@@ -607,5 +607,19 @@
   "sub.alert.invoice_failed": "账单发送失败，请稍后重试。",
   "sub.remind.3d": "⏰ <b>提醒</b>\n\n订阅将在 <b>3 天</b>后到期。请及时续订：",
   "sub.remind.1d": "⏰ <b>最后提醒</b>\n\n订阅将在 <b>明天</b>到期。之后转发将暂停。",
-  "sub.remind.expired": "⚠️ <b>订阅已过期</b>\n\n转发已暂停。请续订以继续使用："
+  "sub.remind.expired": "⚠️ <b>订阅已过期</b>\n\n转发已暂停。请续订以继续使用：",
+  "onboard.welcome.text": "<b>👋 你好！</b>\n\n我是一个消息转发机器人：自动把 Telegram 频道或群组的消息转发到其他聊天，支持过滤、替换、延迟等。\n\n<b>📅 5 天免费试用</b>\n<b>💶 之后约 10 €/月</b>——直接在 Telegram 用 Stars 付款。\n\n因为 <b>每位客户一个专属机器人</b>，你需要自己的机器人。点击下方，我会通知运营者，你很快会收到你专属机器人的链接。",
+  "onboard.how.text": "<b>❓ 使用流程</b>\n\n1️⃣ 点击 <b>\"申请我的机器人\"</b>\n2️⃣ 运营者几分钟内为你搭建专属机器人\n3️⃣ 收到链接后打开机器人，在聊天中登录你的 Telegram 账号\n4️⃣ 完成！可以立刻开始使用。前 <b>5 天免费</b>。\n\n之后可在机器人内用 Telegram Stars 购买订阅。无需信用卡，不泄露个人数据。",
+  "onboard.btn.request": "🚀 申请我的机器人",
+  "onboard.btn.how": "❓ 如何使用？",
+  "onboard.request.sent": "<b>✅ 请求已发送</b>\n\n谢谢 {name}！运营者已收到通知，会尽快给你发送你专属机器人的链接。",
+  "onboard.alert.already_sent": "你的请求已在路上，请稍候。",
+  "onboard.stranger": "未知",
+  "onboard.no_username": "(无 @用户名)",
+  "onboard.admin.notify": "🔔 <b>新的客户机器人申请</b>\n\n👤 <b>姓名：</b> {name}\n📱 <b>Telegram：</b> {handle}\n🆔 <b>客户 ID：</b> <code>{id}</code>\n\n────────────────────\n<b>为 {name} 创建机器人：</b>\n\n<b>步骤 1</b> — 打开 @BotFather\n<b>步骤 2</b> — 发送 <code>/newbot</code>，输入名称（如 \"{name} Forwarder\"）和用户名（必须以 <code>bot</code> 结尾）\n<b>步骤 3</b> — 复制 @BotFather 给你的 <b>Token</b>（形如 <code>1234567890:ABCdef...</code>）\n<b>步骤 4</b> — 在此聊天发送：\n\n<code>/anlegen {id} 你的_TOKEN</code>\n\n我会自动构建容器、启动并通知客户。",
+  "onboard.anlegen.usage": "<b>用法：</b>\n\n<code>/anlegen &lt;客户_id&gt; &lt;bot_token&gt;</code>\n\n示例：\n<code>/anlegen 123456789 1234567890:ABCdef...</code>",
+  "onboard.anlegen.started": "⏳ <b>正在为客户 <code>{id}</code> 部署…</b>\n\n约需 30–90 秒。完成后会通知你。",
+  "onboard.anlegen.done": "✅ <b>客户 <code>{id}</code> 的机器人已上线</b>\n\n部署脚本最后几行：\n<pre>{output}</pre>\n\n请把机器人链接（来自 @BotFather）发给客户。他们通过机器人聊天用 <code>mycode</code>/<code>mypass</code> 登录。",
+  "onboard.anlegen.failed": "❌ <b>部署失败</b>\n\n<pre>{output}</pre>\n\n请检查 VPS 并重新发送命令。",
+  "onboard.customer.ready": "🎉 <b>你的机器人已就绪！</b>\n\n运营者刚刚为你搭建了专属转发机器人。你稍后会收到链接——打开后输入 <code>/start</code>。"
 }

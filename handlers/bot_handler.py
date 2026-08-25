@@ -1,5 +1,6 @@
 from telethon import events
 from handlers.button.callback.callback_handlers import handle_callback
+from handlers.onboarding import handle_anlegen_command
 from handlers.command_handlers import *
 from handlers.link_handlers import handle_message_link
 from handlers.button.menu import build_main_menu
@@ -128,6 +129,7 @@ async def handle_command(client, event):
         'dr': lambda: handle_delete_rule_command(event, command, parts),
         'delete_rss_user': lambda: handle_delete_rss_user_command(event, command, parts),
         'dru': lambda: handle_delete_rss_user_command(event, command, parts),
+        'anlegen': lambda: _handle_anlegen(event, client),
     }
 
     # 执行对应的命令处理器
@@ -137,11 +139,29 @@ async def handle_command(client, event):
 
 
 
+async def _handle_anlegen(event, client):
+    """Wrapper – ruft den Onboarding-Anlegen-Befehl mit Bot-Client auf."""
+    await handle_anlegen_command(event, client)
+
+
+# Callback-Präfixe, die auch Fremde bedienen dürfen (Onboarding).
+STRANGER_CALLBACKS = ('onboard_',)
+
+
 # 注册回调处理器
 @events.register(events.CallbackQuery)
 async def callback_handler(event):
     """回调处理器入口"""
-    # 检查是否是管理员的回调
+    # Onboarding-Buttons dürfen Fremde auch anklicken.
+    try:
+        data = event.data.decode() if event.data else ''
+    except Exception:
+        data = ''
+    if data.startswith(STRANGER_CALLBACKS):
+        await handle_callback(event)
+        return
+
+    # Sonst nur Admins / Kunden dieses Containers
     if not await is_admin(event):
         return
     await handle_callback(event)

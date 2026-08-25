@@ -74,6 +74,12 @@ from handlers.button.payment import (
     callback_billing,
     callback_buy,
 )
+from handlers.onboarding import (
+    callback_onboard_home,
+    callback_onboard_how,
+    callback_onboard_request,
+    callback_onboard_close,
+)
 import logging
 from utils.i18n import t
 import aiohttp
@@ -755,6 +761,11 @@ CALLBACK_HANDLERS = {
     # Abo / Zahlung
     'sub_billing': callback_billing,
     'sub_buy': callback_buy,
+    # Onboarding fremder Interessenten
+    'onboard_home': callback_onboard_home,
+    'onboard_how': callback_onboard_how,
+    'onboard_request': callback_onboard_request,
+    'onboard_close': callback_onboard_close,
     'toggle_current': callback_toggle_current,
     'switch': callback_switch,
     'settings': callback_settings,

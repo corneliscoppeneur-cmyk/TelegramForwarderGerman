@@ -219,13 +219,13 @@ async def handle_bot_message(event, bot_client):
             await handle_prompt_setting(event, bot_client, sender_id, chat_id, current_state, message)
             return
 
-        # Schreibt ein fremder Nutzer im Privatchat, bekommt er – wenn aktiviert –
-        # den Vermietungstext, statt einfach ignoriert zu werden. Admins nicht.
+        # Schreibt ein fremder Nutzer im Privatchat, führt der Bot ihn durch
+        # das Onboarding (Info + „Bot anfordern"). Admins nicht.
         if getattr(event, 'is_private', False):
             from utils.common import is_admin
             if not await is_admin(event):
-                from handlers.sales import maybe_send_pitch
-                await maybe_send_pitch(bot_client, event)
+                from handlers.onboarding import show_stranger_home
+                await show_stranger_home(bot_client, event)
                 return
 
         # 如果没有特殊状态，则处理常规命令

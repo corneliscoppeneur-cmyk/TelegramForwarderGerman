@@ -607,5 +607,19 @@
   "sub.alert.invoice_failed": "Die Rechnung konnte nicht gesendet werden. Bitte später erneut versuchen.",
   "sub.remind.3d": "⏰ <b>Erinnerung</b>\n\nDein Abo läuft in <b>3 Tagen</b> ab. Jetzt bequem verlängern:",
   "sub.remind.1d": "⏰ <b>Letzte Erinnerung</b>\n\nDein Abo läuft <b>morgen</b> ab. Danach pausiert die Weiterleitung.",
-  "sub.remind.expired": "⚠️ <b>Abo abgelaufen</b>\n\nDie Weiterleitung ist jetzt pausiert. Verlängere hier, um weiterzumachen:"
+  "sub.remind.expired": "⚠️ <b>Abo abgelaufen</b>\n\nDie Weiterleitung ist jetzt pausiert. Verlängere hier, um weiterzumachen:",
+  "onboard.welcome.text": "<b>👋 Hallo!</b>\n\nIch bin ein Weiterleitungs-Bot: Ich leite deine Nachrichten automatisch von einem Telegram-Kanal oder einer Gruppe in einen anderen Chat weiter. Du kannst filtern, ersetzen, zeitverzögern und vieles mehr.\n\n<b>📅 5 Tage kostenlos testen</b>\n<b>💶 danach ab ca. 10 € im Monat</b> – bezahlt direkt in Telegram mit Sternen.\n\nWeil ich pro Kunde <b>einen eigenen Bot</b> nutze, brauchst du deinen persönlichen Bot. Klicke unten und ich sage dem Betreiber Bescheid – du bekommst den Link zu deinem eigenen Bot in Kürze.",
+  "onboard.how.text": "<b>❓ So läuft es ab</b>\n\n1️⃣ Du klickst <b>„Jetzt Bot anfordern“</b>\n2️⃣ Der Betreiber richtet in wenigen Minuten deinen eigenen Bot ein\n3️⃣ Du bekommst den Link – öffnest den Bot – meldest dein Telegram-Konto an (ganz im Chat)\n4️⃣ Fertig! Du kannst sofort loslegen. Die ersten <b>5 Tage sind gratis</b>.\n\nDanach kaufst du dein Abo direkt im Bot mit Telegram-Sternen. Keine Kreditkarte, keine Datenpreisgabe.",
+  "onboard.btn.request": "🚀 Jetzt Bot anfordern",
+  "onboard.btn.how": "❓ Wie funktioniert das?",
+  "onboard.request.sent": "<b>✅ Anfrage verschickt</b>\n\nDanke, {name}! Der Betreiber wurde benachrichtigt und meldet sich in Kürze mit dem Link zu deinem eigenen Bot.",
+  "onboard.alert.already_sent": "Deine Anfrage ist schon unterwegs. Bitte warte einen Moment.",
+  "onboard.stranger": "unbekannt",
+  "onboard.no_username": "(kein @username)",
+  "onboard.admin.notify": "🔔 <b>Neue Anfrage für einen Kunden-Bot</b>\n\n👤 <b>Name:</b> {name}\n📱 <b>Telegram:</b> {handle}\n🆔 <b>Kunden-ID:</b> <code>{id}</code>\n\n────────────────────\n<b>So legst du den Bot für {name} an:</b>\n\n<b>Schritt 1</b> – öffne @BotFather\n<b>Schritt 2</b> – schicke <code>/newbot</code>, gib einen Namen (z. B. „{name} Forwarder“) und einen Nutzernamen (endet auf <code>bot</code>)\n<b>Schritt 3</b> – kopiere den <b>Token</b>, den @BotFather dir schickt (sieht so aus: <code>1234567890:ABCdef...</code>)\n<b>Schritt 4</b> – schicke hier im Chat:\n\n<code>/anlegen {id} DEIN_TOKEN_HIER</code>\n\nIch baue dann automatisch den Container, starte ihn und benachrichtige den Kunden.",
+  "onboard.anlegen.usage": "<b>Nutzung:</b>\n\n<code>/anlegen &lt;kunden_id&gt; &lt;bot_token&gt;</code>\n\nBeispiel:\n<code>/anlegen 123456789 1234567890:ABCdef...</code>",
+  "onboard.anlegen.started": "⏳ <b>Deploy läuft für Kunde <code>{id}</code>…</b>\n\nDas dauert je nach VPS 30–90 Sekunden. Ich melde mich, sobald es fertig ist.",
+  "onboard.anlegen.done": "✅ <b>Kunden-Bot für <code>{id}</code> läuft</b>\n\nLetzte Zeilen aus dem Deploy-Skript:\n<pre>{output}</pre>\n\nSchicke dem Kunden jetzt den Link zu seinem Bot (Name aus @BotFather). Er meldet sich dann selbst im Bot-Chat mit <code>mycode</code>/<code>mypass</code> an.",
+  "onboard.anlegen.failed": "❌ <b>Deploy fehlgeschlagen</b>\n\n<pre>{output}</pre>\n\nBitte auf dem VPS prüfen und den Befehl erneut senden.",
+  "onboard.customer.ready": "🎉 <b>Dein Bot ist bereit!</b>\n\nDer Betreiber hat gerade deinen persönlichen Weiterleitungs-Bot eingerichtet. Du bekommst gleich den Link – öffne ihn dann und tippe <code>/start</code>."
 }

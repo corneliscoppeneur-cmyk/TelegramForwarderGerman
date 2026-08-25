@@ -607,5 +607,19 @@
   "sub.alert.invoice_failed": "The invoice could not be sent. Please try again later.",
   "sub.remind.3d": "⏰ <b>Reminder</b>\n\nYour subscription ends in <b>3 days</b>. Renew now:",
   "sub.remind.1d": "⏰ <b>Last reminder</b>\n\nYour subscription ends <b>tomorrow</b>. After that, forwarding is paused.",
-  "sub.remind.expired": "⚠️ <b>Subscription expired</b>\n\nForwarding is now paused. Renew here to continue:"
+  "sub.remind.expired": "⚠️ <b>Subscription expired</b>\n\nForwarding is now paused. Renew here to continue:",
+  "onboard.welcome.text": "<b>👋 Hi!</b>\n\nI'm a forwarding bot: I automatically forward messages from Telegram channels or groups to other chats. You can filter, replace text, add delays and more.\n\n<b>📅 5 days free trial</b>\n<b>💶 then from ~10 €/month</b> – paid directly in Telegram with Stars.\n\nBecause I use <b>one bot per customer</b>, you need your own personal bot. Tap below and I'll notify the operator – you'll receive the link to your own bot shortly.",
+  "onboard.how.text": "<b>❓ How it works</b>\n\n1️⃣ You tap <b>Request my bot</b>\n2️⃣ The operator sets up your personal bot in a few minutes\n3️⃣ You get the link – open the bot – sign in with your Telegram account (all inside the chat)\n4️⃣ Done! You can start right away. The first <b>5 days are free</b>.\n\nAfter that, you buy your subscription right inside the bot with Telegram Stars. No credit card, no data sharing.",
+  "onboard.btn.request": "🚀 Request my bot",
+  "onboard.btn.how": "❓ How does this work?",
+  "onboard.request.sent": "<b>✅ Request sent</b>\n\nThanks, {name}! The operator has been notified and will get back to you shortly with the link to your own bot.",
+  "onboard.alert.already_sent": "Your request is already on its way. Please wait a moment.",
+  "onboard.stranger": "unknown",
+  "onboard.no_username": "(no @username)",
+  "onboard.admin.notify": "🔔 <b>New request for a customer bot</b>\n\n👤 <b>Name:</b> {name}\n📱 <b>Telegram:</b> {handle}\n🆔 <b>Customer ID:</b> <code>{id}</code>\n\n────────────────────\n<b>How to set up the bot for {name}:</b>\n\n<b>Step 1</b> – open @BotFather\n<b>Step 2</b> – send <code>/newbot</code>, choose a name (e.g. {name} Forwarder) and a username (must end with <code>bot</code>)\n<b>Step 3</b> – copy the <b>token</b> @BotFather gives you (looks like <code>1234567890:ABCdef...</code>)\n<b>Step 4</b> – send in this chat:\n\n<code>/anlegen {id} YOUR_TOKEN_HERE</code>\n\nI'll then automatically build the container, start it and notify the customer.",
+  "onboard.anlegen.usage": "<b>Usage:</b>\n\n<code>/anlegen &lt;customer_id&gt; &lt;bot_token&gt;</code>\n\nExample:\n<code>/anlegen 123456789 1234567890:ABCdef...</code>",
+  "onboard.anlegen.started": "⏳ <b>Deploy running for customer <code>{id}</code>…</b>\n\nTakes about 30–90 seconds. I'll let you know when it's done.",
+  "onboard.anlegen.done": "✅ <b>Customer bot for <code>{id}</code> is live</b>\n\nLast lines from the deploy script:\n<pre>{output}</pre>\n\nSend the customer the bot link (name from @BotFather). They log in via the bot chat using <code>mycode</code>/<code>mypass</code>.",
+  "onboard.anlegen.failed": "❌ <b>Deploy failed</b>\n\n<pre>{output}</pre>\n\nCheck the VPS and send the command again.",
+  "onboard.customer.ready": "🎉 <b>Your bot is ready!</b>\n\nThe operator just set up your personal forwarding bot. You'll get the link in a moment – open it and type <code>/start</code>."
 }
