@@ -18,6 +18,7 @@ import re
 import time
 from datetime import datetime, timedelta
 
+import aiohttp
 from telethon import Button
 
 from handlers.subscription import is_admin_user
@@ -204,23 +205,34 @@ async def handle_anlegen_command(event, bot_client):
     ok, output = await _run_deploy(customer_id, bot_token)
 
     if ok:
-        # Botname aus dem Token ableiten (@BotFather nennt ihn erst nach Anlage
-        # – der Admin fügt bei Bedarf im Deploy-Skript einen Link ein)
+        # Bot-Username automatisch aus dem Token holen (via Telegram Bot HTTP-API)
+        bot_username = await _bot_username_from_token(bot_token)
+        bot_link = f'https://t.me/{bot_username}' if bot_username else t('onboard.no_bot_link')
+        support_handle = os.getenv('SUPPORT_HANDLE', '@tele420')
+
+        # Admin: Bestätigung mit klickbarem Link (zum Weiterleiten als Backup)
         try:
             await status.edit(
-                t('onboard.anlegen.done', id=customer_id, output=output[-600:]),
+                t('onboard.anlegen.done',
+                  id=customer_id,
+                  bot_link=bot_link,
+                  output=output[-500:]),
                 parse_mode='html',
                 link_preview=False,
             )
         except Exception:
             pass
 
-        # Kunde benachrichtigen (falls wir seine ID kennen und er noch offen ist)
+        # Kunde benachrichtigen (falls er den Bot noch nicht geblockt hat)
         try:
             await bot_client.send_message(
                 customer_id,
-                t('onboard.customer.ready'),
+                t('onboard.customer.ready',
+                  bot_link=bot_link,
+                  customer_id=customer_id,
+                  support=support_handle),
                 parse_mode='html',
+                link_preview=False,
             )
         except Exception as e:
             logger.info(f'Kunde {customer_id} konnte nicht direkt benachrichtigt werden: {e}')
@@ -233,6 +245,20 @@ async def handle_anlegen_command(event, bot_client):
             )
         except Exception:
             pass
+
+
+async def _bot_username_from_token(bot_token):
+    """Holt den Bot-Nutzernamen (ohne @) via getMe – braucht keine Session."""
+    try:
+        url = f'https://api.telegram.org/bot{bot_token}/getMe'
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=10)) as session:
+            async with session.get(url) as resp:
+                data = await resp.json()
+                if data.get('ok'):
+                    return data['result'].get('username')
+    except Exception as e:
+        logger.warning(f'Bot-Username konnte nicht aus Token gelesen werden: {e}')
+    return None
 
 
 async def _run_deploy(customer_id, bot_token):
