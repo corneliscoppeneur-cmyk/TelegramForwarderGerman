@@ -270,6 +270,24 @@ class Subscription(Base):
     total_stars_paid = Column(Integer, default=0)
 
 
+class ManagedContainer(Base):
+    """Vom Betreiber-Bot gesteuerte Kunden-Container.
+
+    Nur relevant im Betreiber-Container (der ``/anlegen`` ausführt). Hier
+    verzeichnen wir alle deploybaren Kunden-Container, ihren Pfad und wann
+    ein automatischer Aufräumlauf sie ggf. entfernen darf.
+    """
+    __tablename__ = 'managed_containers'
+
+    customer_id = Column(Integer, primary_key=True)
+    container_name = Column(String, nullable=False)
+    path = Column(String, nullable=False)              # /root/customer_bots/customer-<id>
+    created_at = Column(String, nullable=False)        # ISO-Datum
+    warned_at = Column(String, nullable=True)          # ISO-Datum: Warnung an Admin
+    kept_until = Column(String, nullable=True)         # ISO-Datum: /keep-Ablauf, nicht löschen bis
+    deleted_at = Column(String, nullable=True)         # ISO-Datum: schon gelöscht (Historie)
+
+
 def migrate_db(engine):
     """数据库迁移函数，确保新字段的添加"""
     inspector = inspect(engine)
@@ -292,6 +310,11 @@ def migrate_db(engine):
             if 'subscription' not in existing_tables:
                 logging.info("Erstelle subscription-Tabelle...")
                 Subscription.__table__.create(engine)
+
+            # Container-Verwaltung (nur relevant im Betreiber-Container)
+            if 'managed_containers' not in existing_tables:
+                logging.info("Erstelle managed_containers-Tabelle...")
+                ManagedContainer.__table__.create(engine)
 
 
             # 如果users表不存在，创建表

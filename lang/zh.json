@@ -622,5 +622,12 @@
   "onboard.anlegen.done": "✅ <b>客户机器人已上线</b>\n\n🆔 <b>客户 ID：</b>  <code>{id}</code>\n\n🔗 <b>客户机器人链接：</b>\n{bot_link}\n\n客户已自动收到通知。\n\n如果消息没送达（客户已屏蔽机器人或从未联系过），请把上面的链接转发给他们。\n\n\n━━━━━━━━━━━━━━━━━━━━\n📄 <b>部署输出（摘要）</b>\n━━━━━━━━━━━━━━━━━━━━\n<pre>{output}</pre>",
   "onboard.anlegen.failed": "❌ <b>部署失败</b>\n\n<pre>{output}</pre>\n\n请检查 VPS 并重新发送命令。",
   "onboard.no_bot_link": "（未能自动获取链接——请从 @BotFather 获取）",
+  "cleanup.warn": "⚠️ <b>客户容器不活跃</b>\n\n🆔 <b>客户 ID：</b> <code>{id}</code>\n📦 <b>容器：</b> <code>{name}</code>\n\n明天将自动删除此容器（12 天无登录、无转发规则、无付费订阅）。\n\n如需保留，请发送：\n<code>/keep {id}</code>",
+  "cleanup.deleted": "🗑️ <b>客户容器已移除</b>\n\n🆔 <b>客户 ID：</b> <code>{id}</code>\n📦 <b>容器：</b> <code>{name}</code>\n\n目录和容器已删除，磁盘空间已释放。",
+  "cleanup.delete_failed": "❌ <b>自动删除失败</b>\n\n🆔 <b>客户 ID：</b> <code>{id}</code>\n\n<pre>{output}</pre>\n\n请到 VPS 检查。",
+  "onboard.keep.usage": "<b>用法：</b>\n\n<code>/keep &lt;客户_id&gt;</code>\n\n示例：\n<code>/keep 123456789</code>",
+  "onboard.keep.unknown": "❓ <b>未知客户 <code>{id}</code></b>\n\n此客户未在容器管理中登记。",
+  "onboard.keep.done": "✅ <b>客户 <code>{id}</code> 已保护</b>\n\n不会被自动删除——保留到 <b>{until}</b>。",
+  "onboard.keep.failed": "❌ <b>/keep 失败</b>\n\n<pre>{error}</pre>",
   "onboard.customer.ready": "🎉 <b>你的机器人已就绪！</b>\n\n📌 <b>请保存此消息！</b>\n\n包含你的重要登录信息，也是支持服务的凭据。\n\n\n━━━━━━━━━━━━━━━━━━━━\n🔐 <b>你的登录信息</b>\n━━━━━━━━━━━━━━━━━━━━\n\n🔗 <b>你的专属机器人：</b>\n{bot_link}\n\n🆔 <b>客户 ID：</b>\n<code>{customer_id}</code>\n\n📦 <b>套餐：</b>\n5 天免费试用\n\n\n━━━━━━━━━━━━━━━━━━━━\n📲 <b>如何设置账号</b>\n━━━━━━━━━━━━━━━━━━━━\n\n<b>1.</b>  点击上方链接打开你的机器人。\n\n<b>2.</b>  输入 <code>/start</code>。\n\n<b>3.</b>  点击「<b>连接账号</b>」按钮。\n\n<b>4.</b>  输入你的<b>手机号</b>（国际格式，如 <code>+49170…</code>）。\n\n<b>5.</b>  Telegram 会发给你<b>登录码</b>，按此格式发送：\n\n<code>mycode 12345</code>\n\n<b>6.</b>  如果开启了 2FA，密码按此发送：\n\n<code>mypass 你的密码</code>\n\n\n✅ <b>完成！</b>  可立即创建你的第一条转发规则。\n\n\n━━━━━━━━━━━━━━━━━━━━\n💡 <b>提示</b>\n━━━━━━━━━━━━━━━━━━━━\n\n最好<b>复制</b>信息，避免手动输入。\n\n\n━━━━━━━━━━━━━━━━━━━━\n🛟 <b>支持</b>\n━━━━━━━━━━━━━━━━━━━━\n\n有问题请随时联系 {support} 😊\n\n🎫 参考号：<code>{customer_id}</code>"
 }

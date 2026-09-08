@@ -22,6 +22,7 @@ import aiohttp
 from telethon import Button
 
 from handlers.subscription import is_admin_user
+from models.models import ManagedContainer, get_session
 from utils.bot_config import get_config, set_config
 from utils.i18n import t
 
@@ -210,6 +211,9 @@ async def handle_anlegen_command(event, bot_client):
         bot_link = f'https://t.me/{bot_username}' if bot_username else t('onboard.no_bot_link')
         support_handle = os.getenv('SUPPORT_HANDLE', '@tele420')
 
+        # In DB registrieren, damit der Cleanup-Scheduler ihn kennt.
+        _register_container(customer_id)
+
         # Admin: Bestätigung mit klickbarem Link (zum Weiterleiten als Backup)
         try:
             await status.edit(
@@ -245,6 +249,69 @@ async def handle_anlegen_command(event, bot_client):
             )
         except Exception:
             pass
+
+
+def _register_container(customer_id):
+    """Neu angelegten Kunden-Container in DB festhalten (für Cleanup)."""
+    customers_dir = os.getenv('CUSTOMERS_DIR', '/root/customer_bots')
+    path = f'{customers_dir}/customer-{customer_id}'
+    container_name = f'telegram-forwarder-customer-{customer_id}'
+
+    session = get_session()
+    try:
+        row = session.query(ManagedContainer).get(int(customer_id))
+        if row:
+            # Wieder-Deploy nach Löschung: Timer zurücksetzen
+            row.container_name = container_name
+            row.path = path
+            row.created_at = datetime.utcnow().date().isoformat()
+            row.warned_at = None
+            row.kept_until = None
+            row.deleted_at = None
+        else:
+            session.add(ManagedContainer(
+                customer_id=int(customer_id),
+                container_name=container_name,
+                path=path,
+                created_at=datetime.utcnow().date().isoformat(),
+            ))
+        session.commit()
+        logger.info(f'Container-Verwaltung: Kunde {customer_id} registriert')
+    except Exception as e:
+        session.rollback()
+        logger.error(f'Container-Verwaltung: Registrierung fehlgeschlagen: {e}')
+    finally:
+        session.close()
+
+
+async def handle_keep_command(event, bot_client):
+    """``/keep <id>`` – Container von der Aufräumliste ausnehmen (30 Tage)."""
+    if not is_admin_user(event.sender_id):
+        return
+
+    parts = (event.message.text or '').strip().split()
+    if len(parts) != 2 or not parts[1].lstrip('-').isdigit():
+        await event.reply(t('onboard.keep.usage'), parse_mode='html')
+        return
+    customer_id = int(parts[1])
+
+    session = get_session()
+    try:
+        row = session.query(ManagedContainer).get(customer_id)
+        if not row:
+            await event.reply(t('onboard.keep.unknown', id=customer_id), parse_mode='html')
+            return
+        keep_until = (datetime.utcnow().date() + timedelta(days=30)).isoformat()
+        row.kept_until = keep_until
+        row.warned_at = None
+        session.commit()
+        await event.reply(t('onboard.keep.done', id=customer_id, until=keep_until), parse_mode='html')
+    except Exception as e:
+        session.rollback()
+        logger.error(f'/keep fehlgeschlagen: {e}')
+        await event.reply(t('onboard.keep.failed', error=str(e)), parse_mode='html')
+    finally:
+        session.close()
 
 
 async def _bot_username_from_token(bot_token):

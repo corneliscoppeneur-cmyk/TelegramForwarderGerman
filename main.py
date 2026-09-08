@@ -15,6 +15,7 @@ from scheduler.summary_scheduler import SummaryScheduler
 from scheduler.chat_updater import ChatUpdater
 from scheduler.repeat_scheduler import RepeatScheduler
 from scheduler.subscription_scheduler import SubscriptionScheduler
+from scheduler.cleanup_scheduler import CleanupScheduler
 from handlers.bot_handler import send_welcome_message
 from rss.main import app as rss_app
 from utils.log_config import setup_logging
@@ -46,6 +47,7 @@ chat_updater = None
 user_updates_task = None
 repeat_scheduler = None
 subscription_scheduler = None
+cleanup_scheduler = None
 
 
 async def init_db_ops():
@@ -164,6 +166,12 @@ async def start_clients():
         subscription_scheduler = SubscriptionScheduler(bot_client)
         await subscription_scheduler.start()
 
+        # Aufräumdienst für verwaiste Kunden-Container (nur im Betreiber-Bot
+        # überhaupt sinnvoll – in Kunden-Containern gibt es keine Einträge).
+        global cleanup_scheduler
+        cleanup_scheduler = CleanupScheduler(bot_client)
+        await cleanup_scheduler.start()
+
         # Testphase für den Kunden dieses Containers sicherstellen (No-op bei Admin
         # oder wenn bereits ein Abo-Eintrag existiert). Ohne das würde ein
         # bestehender Container nach dem Update sofort blockiert werden, weil
@@ -221,6 +229,9 @@ async def start_clients():
         # Abo-Erinnerungen beenden
         if subscription_scheduler:
             subscription_scheduler.stop()
+        # Aufräumdienst beenden
+        if cleanup_scheduler:
+            cleanup_scheduler.stop()
         # 如果 RSS 服务在运行，停止它
         if 'rss_process' in locals() and rss_process.is_alive():
             rss_process.terminate()
