@@ -369,15 +369,49 @@ async def check_and_clean_chats(session, rule=None):
         return 0
 
 def get_admin_list():
-    """获取管理员ID列表，如果ADMINS为空则使用USER_ID"""
+    """Bot-Admins dieser Instanz.
+
+    Grundverhalten (rückwärtskompatibel):
+      * ``ADMINS`` gesetzt → diese Liste
+      * ``ADMINS`` leer     → Fallback ``USER_ID`` (Container-Besitzer)
+
+    Zusätzlich: ``ADMIN_USER_ID`` (kommagetrennt) — der Haupt-Admin/Betreiber —
+    wird IMMER vorne dazugelegt. So darf der Betreiber jeden Bot bedienen,
+    auch wenn er nicht dessen ``USER_ID`` ist und nicht in ``ADMINS`` steht.
+
+    Rückgabe: dedupliziert, Reihenfolge stabil.
+    """
+    def _parse(raw):
+        for part in (raw or '').split(','):
+            part = part.strip()
+            if not part:
+                continue
+            try:
+                yield int(part)
+            except ValueError:
+                logger.warning(f'Admin-ID konnte nicht gelesen werden: {part!r}')
+
+    ids = list(_parse(os.getenv('ADMIN_USER_ID', '')))
+
     admin_str = os.getenv('ADMINS', '')
-    if not admin_str:
+    if admin_str:
+        for uid in _parse(admin_str):
+            if uid not in ids:
+                ids.append(uid)
+    else:
         user_id = os.getenv('USER_ID')
         if not user_id:
             logger.error('未设置 USER_ID 环境变量')
             raise ValueError('必须在 .env 文件中设置 USER_ID')
-        return [int(user_id)]
-    return [int(admin.strip()) for admin in admin_str.split(',') if admin.strip()]
+        try:
+            uid = int(user_id)
+            if uid not in ids:
+                ids.append(uid)
+        except ValueError:
+            logger.error(f'USER_ID ist keine Zahl: {user_id!r}')
+            raise ValueError('USER_ID in .env muss eine Zahl sein')
+
+    return ids
 
 
 
