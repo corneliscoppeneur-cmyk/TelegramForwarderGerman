@@ -27,6 +27,7 @@ from telethon import Button
 
 from handlers.subscription import is_admin_user
 from models.models import ManagedContainer, get_session
+from utils.host_jobs import host_jobs_available, run_host_job
 from utils.i18n import t
 
 logger = logging.getLogger(__name__)
@@ -220,6 +221,9 @@ def _admin_ids():
 
 async def _run_delete(customer_id):
     if not os.path.exists(DELETE_SCRIPT):
+        # Im Container: Auftrag an den Host-Dienst übergeben
+        if host_jobs_available():
+            return await run_host_job('delete', [customer_id], timeout=300)
         return False, f'Delete-Skript nicht gefunden: {DELETE_SCRIPT}'
     try:
         proc = await asyncio.create_subprocess_exec(

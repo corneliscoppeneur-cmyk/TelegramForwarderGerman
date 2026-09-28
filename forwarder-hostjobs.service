@@ -1,0 +1,18 @@
+# Host-Dienst für den Telegram Forwarder: legt Kunden-Bots an und löscht sie.
+# Installation:
+#   ln -s /root/TelegramForwarderGerman/forwarder-hostjobs.service /etc/systemd/system/
+#   systemctl daemon-reload && systemctl enable --now forwarder-hostjobs
+[Unit]
+Description=Telegram Forwarder Host-Aufträge (Kunden-Bots anlegen/löschen)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=simple
+WorkingDirectory=/root/TelegramForwarderGerman
+ExecStart=/usr/bin/python3 /root/TelegramForwarderGerman/host_job_runner.py
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

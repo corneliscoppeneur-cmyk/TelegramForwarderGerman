@@ -24,6 +24,7 @@ from telethon import Button
 from handlers.subscription import is_admin_user
 from models.models import ManagedContainer, get_session
 from utils.bot_config import get_config, set_config
+from utils.host_jobs import host_jobs_available, run_host_job
 from utils.i18n import t
 
 logger = logging.getLogger(__name__)
@@ -332,6 +333,9 @@ async def _run_deploy(customer_id, bot_token):
     """Deploy-Skript auf dem VPS ausführen."""
     script = os.getenv('DEPLOY_SCRIPT_PATH', DEFAULT_DEPLOY_SCRIPT)
     if not os.path.exists(script):
+        # Im Container: Auftrag an den Host-Dienst übergeben
+        if host_jobs_available():
+            return await run_host_job('deploy', [customer_id, bot_token], timeout=900)
         return False, f'Deploy-Skript nicht gefunden: {script}'
 
     try:
