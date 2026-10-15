@@ -166,3 +166,23 @@ async def on_successful_payment(event):
         )
     except Exception as e:
         logger.warning(f'Bestätigung nach Zahlung nicht zustellbar: {e}')
+
+    # Im Main-Bot: Kunde ohne eigenen Bot direkt zum geführten Erstellen leiten.
+    try:
+        from handlers.onboarding import _is_main_bot
+        if _is_main_bot():
+            from models.models import ManagedContainer, get_session
+            session = get_session()
+            try:
+                has_bot = session.query(ManagedContainer).get(int(event.sender_id))
+            finally:
+                session.close()
+            if not has_bot:
+                from telethon import Button
+                await event.reply(
+                    t('onboard.after_pay.create'),
+                    buttons=[[Button.inline(t('onboard.btn.create_bot'), 'onboard_create_bot')]],
+                    parse_mode='html',
+                )
+    except Exception as e:
+        logger.warning(f'Bot-Erstellen-Hinweis nach Zahlung fehlgeschlagen: {e}')

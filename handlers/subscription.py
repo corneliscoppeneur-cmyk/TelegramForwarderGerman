@@ -15,7 +15,11 @@ from models.models import Subscription, get_session
 
 logger = logging.getLogger(__name__)
 
-TRIAL_DAYS = 5
+# Kostenlose Testphase in Tagen. 0 = kein Gratis-Test (strikt pay-first).
+try:
+    TRIAL_DAYS = int(os.getenv('FREE_TRIAL_DAYS', '5'))
+except (TypeError, ValueError):
+    TRIAL_DAYS = 5
 
 # Preise: Stars → Tage
 PACKAGES = [

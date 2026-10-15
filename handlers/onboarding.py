@@ -85,7 +85,11 @@ def build_welcome_stranger():
     text = t('onboard.welcome.text')
     if _network_url():
         text += '\n\n' + t('onboard.network.note')
-    buttons = [
+    buttons = []
+    # Im Main-Bot ist der geführte Selbst-Weg die Haupt-Aktion.
+    if _is_main_bot():
+        buttons.append([Button.inline(t('onboard.btn.create_bot'), 'onboard_create_bot')])
+    buttons += [
         [Button.inline(t('onboard.btn.request'), 'onboard_request')],
         [Button.inline(t('onboard.btn.selfbot'), 'onboard_selfbot')],
         [Button.inline(t('onboard.btn.how'), 'onboard_how')],
@@ -148,6 +152,62 @@ async def callback_onboard_selfbot(event, rule_id, session, message, data):
     except Exception as e:
         if 'not modified' not in str(e).lower():
             raise
+    await event.answer()
+
+
+async def callback_onboard_create_bot(event, rule_id, session, message, data):
+    """Geführter BotFather-Ablauf (nur Main-Bot, pay-first).
+
+    Zeigt Schritt-für-Schritt, wie der Kunde bei @BotFather selbst einen Bot
+    erstellt. Danach schickt er den Token als ``mybot <token>`` – der Rest läuft
+    über :func:`handle_mybot_command` (Deploy, bei AUTO_APPROVE_SELFBOT direkt).
+    """
+    sender_id = event.sender_id
+
+    # Pay-first: ohne aktives Abo/Test erst zur Paywall.
+    if _is_main_bot():
+        from handlers.subscription import is_active
+        if not is_active(sender_id):
+            from handlers.button.payment import build_billing_screen
+            _, buttons = build_billing_screen(sender_id)
+            try:
+                await message.edit(
+                    t('onboard.paywall.text'), buttons=buttons,
+                    parse_mode='html', link_preview=False)
+            except Exception as e:
+                if 'not modified' not in str(e).lower():
+                    raise
+            await event.answer()
+            return
+
+    # Vorschlag für den Bot-Benutzernamen aus dem Telegram-Username.
+    try:
+        sender = await event.get_sender()
+        suggest = (getattr(sender, 'username', None) or 'mein').lower()
+    except Exception:
+        suggest = 'mein'
+
+    text = t('onboard.create.text', suggest=suggest)
+    buttons = [
+        [Button.url(t('onboard.create.btn.open_botfather'), 'https://t.me/BotFather')],
+        [Button.inline(t('common.btn.back'), 'onboard_home')],
+    ]
+
+    # Optionales Anleitungsbild (Pfad oder Telegram file_id) via BOTFATHER_IMAGE.
+    image = (os.getenv('BOTFATHER_IMAGE', '') or '').strip()
+    try:
+        if image:
+            await event.client.send_file(
+                sender_id, image, caption=text, buttons=buttons, parse_mode='html')
+            try:
+                await message.delete()
+            except Exception:
+                pass
+        else:
+            await message.edit(text, buttons=buttons, parse_mode='html', link_preview=False)
+    except Exception as e:
+        if 'not modified' not in str(e).lower():
+            logger.error(f'BotFather-Anleitung konnte nicht gezeigt werden: {e}')
     await event.answer()
 
 
