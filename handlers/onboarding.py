@@ -53,14 +53,43 @@ def _admin_ids():
     return ids
 
 
+def _support_url():
+    """Support-Link aus SUPPORT_HANDLE (``@name`` oder t.me-URL)."""
+    raw = (os.getenv('SUPPORT_HANDLE', '@tele420') or '').strip()
+    if not raw:
+        return None
+    if raw.startswith(('http://', 'https://', 't.me/')):
+        return raw if raw.startswith('http') else f'https://{raw}'
+    return f'https://t.me/{raw.lstrip("@")}'
+
+
+def _network_url():
+    """Link zum Gruppennetzwerk aus NETWORK_URL (optional)."""
+    return (os.getenv('NETWORK_URL', '') or '').strip() or None
+
+
+def _link_buttons():
+    """Externe Link-Buttons: Support + Gruppennetzwerk (nur wenn konfiguriert)."""
+    rows = []
+    support = _support_url()
+    network = _network_url()
+    if support:
+        rows.append([Button.url(t('onboard.btn.support'), support)])
+    if network:
+        rows.append([Button.url(t('onboard.btn.network'), network)])
+    return rows
+
+
 def build_welcome_stranger():
     """Einstieg für einen Fremden: erklärt kurz und bietet die Aktion an."""
     text = t('onboard.welcome.text')
+    if _network_url():
+        text += '\n\n' + t('onboard.network.note')
     buttons = [
         [Button.inline(t('onboard.btn.request'), 'onboard_request')],
         [Button.inline(t('onboard.btn.selfbot'), 'onboard_selfbot')],
         [Button.inline(t('onboard.btn.how'), 'onboard_how')],
-    ]
+    ] + _link_buttons()
     return text, buttons
 
 
@@ -70,7 +99,7 @@ def build_how_it_works():
         [Button.inline(t('onboard.btn.request'), 'onboard_request')],
         [Button.inline(t('onboard.btn.selfbot'), 'onboard_selfbot')],
         [Button.inline(t('common.btn.back'), 'onboard_home')],
-    ]
+    ] + _link_buttons()
     return text, buttons
 
 

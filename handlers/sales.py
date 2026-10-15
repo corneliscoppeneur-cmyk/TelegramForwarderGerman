@@ -9,6 +9,7 @@ das ohne schwere Importe aufrufen kann.
 """
 
 import logging
+import os
 import time
 
 from utils.bot_config import get_config
@@ -32,8 +33,12 @@ def is_enabled():
 
 
 def get_pitch():
-    """Aktueller Vermietungstext (oder der Standardtext)."""
-    return get_config(KEY_TEXT) or t('sales.default')
+    """Aktueller Vermietungstext (oder der Standardtext), optional mit Netzwerk-Link."""
+    text = get_config(KEY_TEXT) or t('sales.default')
+    network = (os.getenv('NETWORK_URL', '') or '').strip()
+    if network:
+        text += '\n\n' + t('sales.network.footer', url=network)
+    return text
 
 
 async def maybe_send_pitch(bot_client, event):

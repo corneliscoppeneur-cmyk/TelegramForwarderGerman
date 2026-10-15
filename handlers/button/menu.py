@@ -17,6 +17,7 @@ from telethon import Button
 from enums.enums import ForwardMode
 from models.models import ForwardRule, Keyword, ReplaceRule
 from handlers.subscription import is_admin_user
+from utils.buttons import styled_inline, STYLE_SUCCESS, STYLE_DANGER
 from utils.i18n import t
 
 logger = logging.getLogger(__name__)
@@ -95,8 +96,9 @@ def build_rule_overview(session, page=0):
     total_pages = (total + RULES_PER_MENU_PAGE - 1) // RULES_PER_MENU_PAGE
     page = max(0, min(page, total_pages - 1))
 
+    # Nach Quelle gruppieren: mehrere Ziele derselben Quelle stehen zusammen.
     rules = (session.query(ForwardRule)
-             .order_by(ForwardRule.id)
+             .order_by(ForwardRule.source_chat_id, ForwardRule.id)
              .offset(page * RULES_PER_MENU_PAGE)
              .limit(RULES_PER_MENU_PAGE)
              .all())
@@ -146,12 +148,13 @@ def build_rule_card(session, rule_id):
     )
 
     toggle_label = t('menu.btn.turn_off') if rule.enable_rule else t('menu.btn.turn_on')
+    toggle_style = STYLE_DANGER if rule.enable_rule else STYLE_SUCCESS
     repeat_label = t('menu.btn.repeat')
     if rule.enable_repeat:
         repeat_label += ' ✅'
 
     buttons = [
-        [Button.inline(toggle_label, f'rule_toggle:{rule.id}')],
+        [styled_inline(toggle_label, f'rule_toggle:{rule.id}', toggle_style)],
         [
             Button.inline(t('menu.btn.words'), f'words:{rule.id}:0'),
             Button.inline(t('menu.btn.replaces'), f'replaces:{rule.id}:0'),

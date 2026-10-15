@@ -14,6 +14,7 @@ from telethon import Button
 
 from managers.state_manager import state_manager
 from models.models import ForwardRule
+from utils.buttons import styled_inline, STYLE_SUCCESS, STYLE_DANGER
 from utils.common import get_main_module
 from utils.i18n import t
 
@@ -27,6 +28,9 @@ QUICK_CHOICES = [3, 15, 30, 60, 180, 360, 720, 1440]
 # Grenzen für eigene Eingaben
 MIN_MINUTES = 1
 MAX_MINUTES = 10080  # eine Woche
+
+# Unter diesem Abstand (Minuten) wird vor Sperrgefahr gewarnt / markiert.
+WARN_MINUTES = 15
 
 
 async def _safe_edit(message, text, buttons):
@@ -68,15 +72,17 @@ def build_repeat_screen(session, rule_id):
     else:
         status = t('repeat.status.off')
 
-    text = t('repeat.text', status=status)
+    text = t('repeat.text', status=status) + '\n\n' + t('repeat.ban_warning')
 
     toggle = t('repeat.btn.turn_off') if rule.enable_repeat else t('repeat.btn.turn_on')
-    buttons = [[Button.inline(toggle, f'repeat_toggle:{rule.id}')]]
+    toggle_style = STYLE_DANGER if rule.enable_repeat else STYLE_SUCCESS
+    buttons = [[styled_inline(toggle, f'repeat_toggle:{rule.id}', toggle_style)]]
 
     row = []
     for minutes in QUICK_CHOICES:
         mark = '✅ ' if minutes == interval else ''
-        row.append(Button.inline(f'{mark}{describe_interval(minutes)}', f'repeat_set:{rule.id}:{minutes}'))
+        warn = ' ⚠️' if minutes < WARN_MINUTES else ''
+        row.append(Button.inline(f'{mark}{describe_interval(minutes)}{warn}', f'repeat_set:{rule.id}:{minutes}'))
         if len(row) == 3:
             buttons.append(row)
             row = []
