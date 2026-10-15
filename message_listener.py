@@ -224,6 +224,11 @@ async def handle_bot_message(event, bot_client):
         if getattr(event, 'is_private', False):
             from utils.common import is_admin
             if not await is_admin(event):
+                # Kunde schickt eigenen Bot-Token: ``mybot <token>`` → Freigabe-Flow
+                if (event.message.text or '').strip().lower().startswith('mybot'):
+                    from handlers.onboarding import handle_mybot_command
+                    await handle_mybot_command(event, bot_client)
+                    return
                 from handlers.onboarding import show_stranger_home
                 await show_stranger_home(bot_client, event)
                 return

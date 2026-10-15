@@ -554,6 +554,7 @@
   "repeat.alert.turned_on": "已开启重复发送",
   "repeat.alert.turned_off": "已关闭重复发送",
   "repeat.alert.interval_saved": "现在每 {interval}",
+  "repeat.ban_warning": "⚠️ <b>封号风险：</b>间隔过短会被 Telegram 视为垃圾信息，可能导致账号或频道被封。建议至少 30–60 分钟，低于 15 分钟请谨慎使用。",
   "menu.btn.paid": "⭐ 付费内容",
   "paid.text": "<b>⭐ 付费内容</b>\n\n{status}\n\n当来源聊天中的内容位于付费墙之后时，机器人会在目标聊天中重新加上付费墙。\n\n<b>重要：</b>这只在已连接的账号本身有权查看该内容时才有效，即已购买或属于该频道。否则 Telegram 只会给出模糊预览，届时仅转发文字部分。\n\n另外，Telegram 只允许在频道中发布付费内容，群组不支持。",
   "paid.status.same_as_original": "当前使用<b>与原文相同的价格</b>。",
@@ -629,5 +630,17 @@
   "onboard.keep.unknown": "❓ <b>未知客户 <code>{id}</code></b>\n\n此客户未在容器管理中登记。",
   "onboard.keep.done": "✅ <b>客户 <code>{id}</code> 已保护</b>\n\n不会被自动删除——保留到 <b>{until}</b>。",
   "onboard.keep.failed": "❌ <b>/keep 失败</b>\n\n<pre>{error}</pre>",
-  "onboard.customer.ready": "🎉 <b>你的机器人已就绪！</b>\n\n📌 <b>请保存此消息！</b>\n\n包含你的重要登录信息，也是支持服务的凭据。\n\n\n━━━━━━━━━━━━━━━━━━━━\n🔐 <b>你的登录信息</b>\n━━━━━━━━━━━━━━━━━━━━\n\n🔗 <b>你的专属机器人：</b>\n{bot_link}\n\n🆔 <b>客户 ID：</b>\n<code>{customer_id}</code>\n\n📦 <b>套餐：</b>\n5 天免费试用\n\n\n━━━━━━━━━━━━━━━━━━━━\n📲 <b>如何设置账号</b>\n━━━━━━━━━━━━━━━━━━━━\n\n<b>1.</b>  点击上方链接打开你的机器人。\n\n<b>2.</b>  输入 <code>/start</code>。\n\n<b>3.</b>  点击「<b>连接账号</b>」按钮。\n\n<b>4.</b>  输入你的<b>手机号</b>（国际格式，如 <code>+49170…</code>）。\n\n<b>5.</b>  Telegram 会发给你<b>登录码</b>，按此格式发送：\n\n<code>mycode 12345</code>\n\n<b>6.</b>  如果开启了 2FA，密码按此发送：\n\n<code>mypass 你的密码</code>\n\n\n✅ <b>完成！</b>  可立即创建你的第一条转发规则。\n\n\n━━━━━━━━━━━━━━━━━━━━\n💡 <b>提示</b>\n━━━━━━━━━━━━━━━━━━━━\n\n最好<b>复制</b>信息，避免手动输入。\n\n\n━━━━━━━━━━━━━━━━━━━━\n🛟 <b>支持</b>\n━━━━━━━━━━━━━━━━━━━━\n\n有问题请随时联系 {support} 😊\n\n🎫 参考号：<code>{customer_id}</code>"
+  "onboard.customer.ready": "🎉 <b>你的机器人已就绪！</b>\n\n📌 <b>请保存此消息！</b>\n\n包含你的重要登录信息，也是支持服务的凭据。\n\n\n━━━━━━━━━━━━━━━━━━━━\n🔐 <b>你的登录信息</b>\n━━━━━━━━━━━━━━━━━━━━\n\n🔗 <b>你的专属机器人：</b>\n{bot_link}\n\n🆔 <b>客户 ID：</b>\n<code>{customer_id}</code>\n\n📦 <b>套餐：</b>\n5 天免费试用\n\n\n━━━━━━━━━━━━━━━━━━━━\n📲 <b>如何设置账号</b>\n━━━━━━━━━━━━━━━━━━━━\n\n<b>1.</b>  点击上方链接打开你的机器人。\n\n<b>2.</b>  输入 <code>/start</code>。\n\n<b>3.</b>  点击「<b>连接账号</b>」按钮。\n\n<b>4.</b>  输入你的<b>手机号</b>（国际格式，如 <code>+49170…</code>）。\n\n<b>5.</b>  Telegram 会发给你<b>登录码</b>，按此格式发送：\n\n<code>mycode 12345</code>\n\n<b>6.</b>  如果开启了 2FA，密码按此发送：\n\n<code>mypass 你的密码</code>\n\n\n✅ <b>完成！</b>  可立即创建你的第一条转发规则。\n\n\n━━━━━━━━━━━━━━━━━━━━\n💡 <b>提示</b>\n━━━━━━━━━━━━━━━━━━━━\n\n最好<b>复制</b>信息，避免手动输入。\n\n\n━━━━━━━━━━━━━━━━━━━━\n🛟 <b>支持</b>\n━━━━━━━━━━━━━━━━━━━━\n\n有问题请随时联系 {support} 😊\n\n🎫 参考号：<code>{customer_id}</code>",
+  "onboard.btn.selfbot": "🤖 我已有机器人 Token",
+  "onboard.selfbot.text": "<b>🤖 发送你自己的机器人 Token</b>\n\n你可以在 1 分钟内自己创建机器人并把 Token 发给我——经过快速审核后即可立即使用。\n\n<b>第 1 步</b> – 打开 @BotFather\n<b>第 2 步</b> – 发送 <code>/newbot</code>\n<b>第 3 步</b> – 输入名称和用户名（必须以 <code>bot</code> 结尾）\n<b>第 4 步</b> – @BotFather 会给你一个 <b>Token</b>（形如 <code>1234567890:ABCdef...</code>）\n<b>第 5 步</b> – 在<b>本聊天</b>中发送，前面加 <code>mybot</code>：\n\n<code>mybot 你的TOKEN</code>\n\n运营方审核通过后，你会立即收到自己机器人的链接。你的 Token 消息我会马上删除。",
+  "onboard.mybot.usage": "<b>使用方法：</b>\n\n把 @BotFather 给的机器人 Token 前面加 <code>mybot</code> 发送：\n\n<code>mybot 1234567890:ABCdef...</code>",
+  "onboard.mybot.invalid": "<b>❌ 此 Token 无效</b>\n\n请确认已完整复制 @BotFather 给的 Token，然后重新发送：\n\n<code>mybot 你的TOKEN</code>",
+  "onboard.mybot.received": "<b>✅ 已收到 Token</b>\n\n谢谢！你的申请已提交运营方审核。稍后你会收到自己机器人的链接。🙌",
+  "onboard.admin.notify_approval": "🔔 <b>新的机器人申请（客户自行发送了 Token）</b>\n\n👤 <b>姓名：</b> {name}\n📱 <b>Telegram：</b> {handle}\n🆔 <b>客户 ID：</b> <code>{id}</code>\n🤖 <b>机器人：</b> @{bot}\n\n点击<b>批准</b>后，我会立即创建容器并自动通知客户。",
+  "onboard.cadm.btn.approve": "✅ 批准",
+  "onboard.cadm.btn.reject": "❌ 拒绝",
+  "onboard.cadm.deploying": "部署中…",
+  "onboard.cadm.gone": "该申请已不存在（已处理）。",
+  "onboard.cadm.rejected": "❌ <b>申请已拒绝</b>\n\n已通知客户 <code>{id}</code>。未创建容器。",
+  "onboard.customer.rejected": "<b>你的机器人申请未获批准。</b>\n\n如有疑问，请联系支持：{support}"
 }

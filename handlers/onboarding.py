@@ -22,7 +22,7 @@ import aiohttp
 from telethon import Button
 
 from handlers.subscription import is_admin_user
-from models.models import ManagedContainer, get_session
+from models.models import ManagedContainer, PendingBotRequest, get_session
 from utils.bot_config import get_config, set_config
 from utils.i18n import t
 
@@ -57,6 +57,7 @@ def build_welcome_stranger():
     text = t('onboard.welcome.text')
     buttons = [
         [Button.inline(t('onboard.btn.request'), 'onboard_request')],
+        [Button.inline(t('onboard.btn.selfbot'), 'onboard_selfbot')],
         [Button.inline(t('onboard.btn.how'), 'onboard_how')],
     ]
     return text, buttons
@@ -66,6 +67,16 @@ def build_how_it_works():
     text = t('onboard.how.text')
     buttons = [
         [Button.inline(t('onboard.btn.request'), 'onboard_request')],
+        [Button.inline(t('onboard.btn.selfbot'), 'onboard_selfbot')],
+        [Button.inline(t('common.btn.back'), 'onboard_home')],
+    ]
+    return text, buttons
+
+
+def build_selfbot_guide():
+    """Kunde will eigenen Bot-Token schicken: Schritt-für-Schritt @BotFather."""
+    text = t('onboard.selfbot.text')
+    buttons = [
         [Button.inline(t('common.btn.back'), 'onboard_home')],
     ]
     return text, buttons
@@ -92,6 +103,16 @@ async def callback_onboard_home(event, rule_id, session, message, data):
 
 async def callback_onboard_how(event, rule_id, session, message, data):
     text, buttons = build_how_it_works()
+    try:
+        await message.edit(text, buttons=buttons, parse_mode='html', link_preview=False)
+    except Exception as e:
+        if 'not modified' not in str(e).lower():
+            raise
+    await event.answer()
+
+
+async def callback_onboard_selfbot(event, rule_id, session, message, data):
+    text, buttons = build_selfbot_guide()
     try:
         await message.edit(text, buttons=buttons, parse_mode='html', link_preview=False)
     except Exception as e:
@@ -181,6 +202,9 @@ async def _notify_admins(bot_client, customer_id, name, username):
 # --------------------------------------------------------------------------
 
 _ANLEGEN_RE = re.compile(r'^/anlegen\s+(-?\d+)\s+(\S+)\s*$')
+
+# Kunde schickt seinen eigenen Bot-Token: ``mybot 1234567890:ABCdef...``
+_MYBOT_RE = re.compile(r'^mybot\s+(\d{5,}:[A-Za-z0-9_-]{20,})\s*$', re.IGNORECASE)
 
 
 async def handle_anlegen_command(event, bot_client):
@@ -351,3 +375,215 @@ async def _run_deploy(customer_id, bot_token):
     except Exception as e:
         logger.error(f'Deploy fehlgeschlagen: {e}')
         return False, str(e)
+
+
+# --------------------------------------------------------------------------
+# Kunden-Selbstbedienung: mybot <token>  →  Admin-Freigabe per Button
+# --------------------------------------------------------------------------
+
+async def handle_mybot_command(event, bot_client):
+    """Kunde schickt eigenen Bot-Token: ``mybot <token>``.
+
+    Token wird geprüft (getMe), die Nachricht sofort gelöscht (Geheimnis),
+    die Anfrage in der DB geparkt und dem Admin mit Freigabe-Buttons gemeldet.
+    Deploy läuft erst nach Admin-Klick auf „Freigeben".
+    """
+    sender_id = event.sender_id
+    text = (event.message.text or '').strip()
+    match = _MYBOT_RE.match(text)
+
+    # Token-Nachricht sofort löschen – enthält ein Geheimnis.
+    try:
+        await event.message.delete()
+    except Exception:
+        pass
+
+    if not match:
+        try:
+            await bot_client.send_message(
+                sender_id, t('onboard.mybot.usage'), parse_mode='html', link_preview=False)
+        except Exception:
+            pass
+        return
+
+    bot_token = match.group(1)
+
+    # Token gegen Telegram prüfen, bevor wir den Admin behelligen.
+    bot_username = await _bot_username_from_token(bot_token)
+    if not bot_username:
+        try:
+            await bot_client.send_message(
+                sender_id, t('onboard.mybot.invalid'), parse_mode='html', link_preview=False)
+        except Exception:
+            pass
+        return
+
+    # Absenderdaten sammeln
+    try:
+        sender = await event.get_sender()
+        username = getattr(sender, 'username', None) or ''
+        name = ((getattr(sender, 'first_name', None) or '') + ' '
+                + (getattr(sender, 'last_name', None) or '')).strip() or t('onboard.stranger')
+    except Exception:
+        username, name = '', t('onboard.stranger')
+
+    _save_pending(sender_id, bot_token, username, name, bot_username)
+
+    # Kunde: Eingangsbestätigung
+    try:
+        await bot_client.send_message(
+            sender_id, t('onboard.mybot.received'), parse_mode='html', link_preview=False)
+    except Exception:
+        pass
+
+    # Admin: Freigabe-Anfrage mit Buttons
+    await _notify_admins_approval(bot_client, sender_id, name, username, bot_username)
+
+
+def _save_pending(customer_id, bot_token, username, name, bot_username):
+    session = get_session()
+    try:
+        row = session.query(PendingBotRequest).get(int(customer_id))
+        if row:
+            row.bot_token = bot_token
+            row.username = username
+            row.name = name
+            row.bot_username = bot_username
+            row.requested_at = datetime.utcnow().isoformat(timespec='seconds')
+        else:
+            session.add(PendingBotRequest(
+                customer_id=int(customer_id),
+                bot_token=bot_token,
+                username=username,
+                name=name,
+                bot_username=bot_username,
+                requested_at=datetime.utcnow().isoformat(timespec='seconds'),
+            ))
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        logger.error(f'Pending-Anfrage speichern fehlgeschlagen: {e}')
+    finally:
+        session.close()
+
+
+async def _notify_admins_approval(bot_client, customer_id, name, username, bot_username):
+    """Freigabe-Anfrage mit Buttons an alle Admins senden."""
+    admins = _admin_ids()
+    if not admins:
+        logger.warning('mybot: kein ADMIN_USER_ID gesetzt – keine Freigabe-Meldung möglich')
+        return
+
+    handle = f'@{username}' if username else t('onboard.no_username')
+    text = t('onboard.admin.notify_approval',
+             name=name, handle=handle, id=customer_id, bot=bot_username)
+    buttons = [[
+        Button.inline(t('onboard.cadm.btn.approve'), f'cadm_ok:{customer_id}'),
+        Button.inline(t('onboard.cadm.btn.reject'), f'cadm_no:{customer_id}'),
+    ]]
+
+    for admin_id in admins:
+        try:
+            await bot_client.send_message(
+                admin_id, text, buttons=buttons, parse_mode='html', link_preview=False)
+            logger.info(f'mybot-Freigabe-Anfrage an Admin {admin_id} verschickt')
+        except Exception as e:
+            logger.warning(f'mybot-Freigabe-Anfrage an Admin {admin_id} fehlgeschlagen: {e}')
+
+
+async def callback_cadm_approve(event, rule_id, session, message, data):
+    """Admin klickt „Freigeben" – Container bauen und Kunde benachrichtigen."""
+    try:
+        customer_id = int(rule_id)
+    except (TypeError, ValueError):
+        await event.answer()
+        return
+
+    row = session.query(PendingBotRequest).get(customer_id)
+    if not row:
+        await event.answer(t('onboard.cadm.gone'), alert=True)
+        return
+
+    bot_token = row.bot_token
+    bot_username = row.bot_username
+
+    await event.answer(t('onboard.cadm.deploying'))
+    try:
+        await message.edit(t('onboard.anlegen.started', id=customer_id), parse_mode='html')
+    except Exception:
+        pass
+
+    ok, output = await _run_deploy(customer_id, bot_token)
+
+    if ok:
+        if not bot_username:
+            bot_username = await _bot_username_from_token(bot_token)
+        bot_link = f'https://t.me/{bot_username}' if bot_username else t('onboard.no_bot_link')
+        support_handle = os.getenv('SUPPORT_HANDLE', '@tele420')
+
+        _register_container(customer_id)
+        try:
+            session.delete(row)
+            session.commit()
+        except Exception:
+            session.rollback()
+
+        try:
+            await message.edit(
+                t('onboard.anlegen.done', id=customer_id, bot_link=bot_link, output=output[-500:]),
+                parse_mode='html', link_preview=False)
+        except Exception:
+            pass
+
+        try:
+            await event.client.send_message(
+                customer_id,
+                t('onboard.customer.ready',
+                  bot_link=bot_link, customer_id=customer_id, support=support_handle),
+                parse_mode='html', link_preview=False)
+        except Exception as e:
+            logger.info(f'Kunde {customer_id} konnte nicht benachrichtigt werden: {e}')
+    else:
+        # Fehlgeschlagen: Zeile behalten, Buttons wieder anbieten für Retry.
+        buttons = [[
+            Button.inline(t('onboard.cadm.btn.approve'), f'cadm_ok:{customer_id}'),
+            Button.inline(t('onboard.cadm.btn.reject'), f'cadm_no:{customer_id}'),
+        ]]
+        try:
+            await message.edit(
+                t('onboard.anlegen.failed', output=output[-800:]),
+                buttons=buttons, parse_mode='html', link_preview=False)
+        except Exception:
+            pass
+
+
+async def callback_cadm_reject(event, rule_id, session, message, data):
+    """Admin klickt „Ablehnen" – Anfrage verwerfen, Kunde informieren."""
+    try:
+        customer_id = int(rule_id)
+    except (TypeError, ValueError):
+        await event.answer()
+        return
+
+    row = session.query(PendingBotRequest).get(customer_id)
+    if row:
+        try:
+            session.delete(row)
+            session.commit()
+        except Exception:
+            session.rollback()
+
+    try:
+        await message.edit(t('onboard.cadm.rejected', id=customer_id), parse_mode='html')
+    except Exception:
+        pass
+
+    try:
+        await event.client.send_message(
+            customer_id,
+            t('onboard.customer.rejected', support=os.getenv('SUPPORT_HANDLE', '@tele420')),
+            parse_mode='html', link_preview=False)
+    except Exception:
+        pass
+
+    await event.answer()

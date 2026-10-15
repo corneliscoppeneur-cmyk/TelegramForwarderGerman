@@ -288,6 +288,24 @@ class ManagedContainer(Base):
     deleted_at = Column(String, nullable=True)         # ISO-Datum: schon gelöscht (Historie)
 
 
+class PendingBotRequest(Base):
+    """Kunden-Anfrage mit Bot-Token, die auf Admin-Freigabe wartet.
+
+    Der Kunde holt sich selbst einen Bot bei @BotFather und schickt dessen
+    Token als ``mybot <token>`` an den Betreiber-Bot. Der Token wird hier
+    zwischengespeichert, bis der Admin per Button freigibt oder ablehnt.
+    Nach der Entscheidung wird die Zeile gelöscht (Token ist ein Geheimnis).
+    """
+    __tablename__ = 'pending_bot_requests'
+
+    customer_id = Column(Integer, primary_key=True)
+    bot_token = Column(String, nullable=False)
+    username = Column(String, nullable=True)       # @username des Kunden
+    name = Column(String, nullable=True)           # Anzeigename des Kunden
+    bot_username = Column(String, nullable=True)    # Bot-Nutzername (ohne @), via getMe
+    requested_at = Column(String, nullable=False)   # ISO-Zeitstempel
+
+
 def migrate_db(engine):
     """数据库迁移函数，确保新字段的添加"""
     inspector = inspect(engine)
@@ -315,6 +333,11 @@ def migrate_db(engine):
             if 'managed_containers' not in existing_tables:
                 logging.info("Erstelle managed_containers-Tabelle...")
                 ManagedContainer.__table__.create(engine)
+
+            # Offene Bot-Anfragen (Kunde schickt mybot <token>, wartet auf Freigabe)
+            if 'pending_bot_requests' not in existing_tables:
+                logging.info("Erstelle pending_bot_requests-Tabelle...")
+                PendingBotRequest.__table__.create(engine)
 
 
             # 如果users表不存在，创建表

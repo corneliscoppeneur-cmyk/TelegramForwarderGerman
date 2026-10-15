@@ -79,6 +79,9 @@ from handlers.onboarding import (
     callback_onboard_how,
     callback_onboard_request,
     callback_onboard_close,
+    callback_onboard_selfbot,
+    callback_cadm_approve,
+    callback_cadm_reject,
 )
 import logging
 from utils.i18n import t
@@ -766,6 +769,10 @@ CALLBACK_HANDLERS = {
     'onboard_how': callback_onboard_how,
     'onboard_request': callback_onboard_request,
     'onboard_close': callback_onboard_close,
+    'onboard_selfbot': callback_onboard_selfbot,
+    # Admin-Freigabe der Kunden-Bot-Anfrage (mybot-Flow)
+    'cadm_ok': callback_cadm_approve,
+    'cadm_no': callback_cadm_reject,
     'toggle_current': callback_toggle_current,
     'switch': callback_switch,
     'settings': callback_settings,
