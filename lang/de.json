@@ -518,6 +518,7 @@
   "replaces.alert.input_lost": "Die Eingabe ist abgelaufen – bitte neu starten",
   "replaces.alert.saved": "Ersetzung gespeichert",
   "login.needed.text": "<b>🔐 Erst dein Telegram-Konto verbinden</b>\n\nDamit ich Nachrichten aus deinen Kanälen und Gruppen mitlesen kann, muss ich mich einmalig mit deinem Telegram-Konto verbinden.\n\nDas dauert eine Minute: Telefonnummer eingeben, Code aus Telegram bestätigen, fertig.",
+  "login.security.note": "🛡️ <b>Sicherheit:</b> Zum Mitlesen braucht Telegram ein Benutzerkonto – anders geht es technisch nicht. <b>Nutze am besten ein separates Zweitkonto</b>, nicht dein Hauptkonto. Dein 2FA-Passwort wird nur zum Login benutzt und nirgends gespeichert; deine Code-/Passwort-Nachricht wird sofort gelöscht.",
   "login.btn.connect": "🔐 Telegram-Konto verbinden",
   "login.btn.retry": "🔁 Noch einmal",
   "login.btn.resend": "🔁 Neuen Code anfordern",

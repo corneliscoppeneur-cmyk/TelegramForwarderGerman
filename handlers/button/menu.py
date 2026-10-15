@@ -42,7 +42,7 @@ def shorten(name, max_len=MAX_NAME_LEN):
 def main_menu_text(connected=True):
     """Begrüßungstext des Hauptmenüs."""
     if not connected:
-        return t('login.needed.text')
+        return t('login.needed.text') + '\n\n' + t('login.security.note')
     return t('menu.main.text')
 
 

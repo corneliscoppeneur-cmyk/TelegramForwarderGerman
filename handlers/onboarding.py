@@ -85,6 +85,7 @@ def build_welcome_stranger():
     text = t('onboard.welcome.text')
     if _network_url():
         text += '\n\n' + t('onboard.network.note')
+    text += '\n\n' + t('login.security.note')
     buttons = []
     # Im Main-Bot ist der geführte Selbst-Weg die Haupt-Aktion.
     if _is_main_bot():
@@ -98,7 +99,7 @@ def build_welcome_stranger():
 
 
 def build_how_it_works():
-    text = t('onboard.how.text')
+    text = t('onboard.how.text') + '\n\n' + t('login.security.note')
     buttons = [
         [Button.inline(t('onboard.btn.request'), 'onboard_request')],
         [Button.inline(t('onboard.btn.selfbot'), 'onboard_selfbot')],

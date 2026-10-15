@@ -518,6 +518,7 @@
   "replaces.alert.input_lost": "输入已过期，请重新开始",
   "replaces.alert.saved": "替换已保存",
   "login.needed.text": "<b>🔐 请先连接你的 Telegram 账号</b>\n\n为了能读取你的频道和群组消息，我需要先与你的 Telegram 账号连接一次。\n\n只需一分钟：输入手机号，确认 Telegram 发来的验证码，完成。",
+  "login.security.note": "🛡️ <b>安全：</b>读取消息需要一个 Telegram 用户账号——技术上无法避免。<b>最好使用一个单独的小号</b>，不要用你的主账号。你的两步验证密码仅用于登录、绝不保存；你的验证码/密码消息会被立即删除。",
   "login.btn.connect": "🔐 连接 Telegram 账号",
   "login.btn.retry": "🔁 重试",
   "login.btn.resend": "🔁 重新获取验证码",

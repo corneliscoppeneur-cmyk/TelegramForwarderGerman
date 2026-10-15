@@ -92,7 +92,7 @@ async def callback_login_start(event, rule_id, session, message, data):
 
     await _edit(
         message,
-        t('login.phone.ask'),
+        t('login.phone.ask') + '\n\n' + t('login.security.note'),
         [[Button.inline(t('menu.btn.cancel'), 'login_cancel')]],
     )
     await event.answer()

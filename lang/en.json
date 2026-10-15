@@ -518,6 +518,7 @@
   "replaces.alert.input_lost": "Your input expired – please start again",
   "replaces.alert.saved": "Replacement saved",
   "login.needed.text": "<b>🔐 First connect your Telegram account</b>\n\nSo I can read along in your channels and groups, I need to connect to your Telegram account once.\n\nIt takes a minute: enter your phone number, confirm the code from Telegram, done.",
+  "login.security.note": "🛡️ <b>Security:</b> Reading messages requires a Telegram user account – there's no technical way around it. <b>Best use a separate secondary account</b>, not your main one. Your 2FA password is only used to log in and never stored; your code/password message is deleted immediately.",
   "login.btn.connect": "🔐 Connect Telegram account",
   "login.btn.retry": "🔁 Try again",
   "login.btn.resend": "🔁 Request a new code",

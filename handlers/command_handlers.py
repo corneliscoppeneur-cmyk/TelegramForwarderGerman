@@ -720,7 +720,10 @@ async def handle_start_command(event):
     """处理 start 命令"""
 
     connected = await is_connected()
-    welcome_text = t("cmd.start.text", version=VERSION) if connected else t('login.needed.text')
+    if connected:
+        welcome_text = t("cmd.start.text", version=VERSION)
+    else:
+        welcome_text = t('login.needed.text') + '\n\n' + t('login.security.note')
 
     # Testphase beim ersten Kontakt anlegen (nur für Kunden, nicht Admin)
     try:
