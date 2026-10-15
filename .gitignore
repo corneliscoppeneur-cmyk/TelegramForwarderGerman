@@ -33,3 +33,6 @@ handlers/bot_handler copy.py
 
 /logs
 logs/telegram_forwarder.log
+
+# Aufträge an den Host-Dienst (Kunden-Bot anlegen/löschen)
+hostjobs/

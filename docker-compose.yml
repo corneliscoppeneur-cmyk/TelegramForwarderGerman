@@ -16,6 +16,8 @@ services:
       - ./config:/app/config
       - ./rss/data:/app/rss/data
       - ./rss/media:/app/rss/media
+      # Aufträge an den Host (Kunden-Bot anlegen/löschen), siehe host_job_runner.py
+      - ./hostjobs:/app/hostjobs
     logging:
       driver: "json-file"
       options:

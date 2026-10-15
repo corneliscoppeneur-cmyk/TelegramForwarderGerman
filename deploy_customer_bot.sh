@@ -16,7 +16,7 @@ BOT_TOKEN="${2:-}"
 
 TEMPLATE_DIR="${TEMPLATE_DIR:-/root/TelegramForwarderGerman}"
 CUSTOMERS_DIR="${CUSTOMERS_DIR:-/root/customer_bots}"
-BRANCH="${DEPLOY_BRANCH:-feature/button-ux}"
+BRANCH="${DEPLOY_BRANCH:-main}"
 
 if [[ -z "$CUSTOMER_ID" || -z "$BOT_TOKEN" ]]; then
   echo "Nutzung: $0 <kunden_id> <bot_token>" >&2
