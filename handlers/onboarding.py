@@ -411,8 +411,81 @@ async def _run_deploy(customer_id, bot_token):
 
 
 # --------------------------------------------------------------------------
-# Kunden-Selbstbedienung: mybot <token>  →  Admin-Freigabe per Button
+# Kunden-Selbstbedienung: mybot <token>  →  Pay-first + optional vollautomatisch
 # --------------------------------------------------------------------------
+
+def _is_main_bot():
+    """True, wenn dies der zentrale Betreiber-/Abrechnungs-Bot ist (MAIN_BOT=1).
+
+    Nur im Main-Bot laufen Paywall und vollautomatische Selbst-Anbindung. In
+    Kunden-Containern ist MAIN_BOT nicht gesetzt (deploy_customer_bot.sh kopiert
+    es nicht) – deren Verhalten bleibt unverändert.
+    """
+    return (os.getenv('MAIN_BOT', '') or '').strip().lower() in ('1', 'true', 'yes')
+
+
+def _auto_approve_selfbot():
+    """True, wenn nach bezahltem Abo ohne Admin-Klick deployt werden soll."""
+    return (os.getenv('AUTO_APPROVE_SELFBOT', '') or '').strip().lower() in ('1', 'true', 'yes')
+
+
+async def _send_paywall(bot_client, customer_id):
+    """Zahlungsaufforderung + Paket-Buttons schicken (Pay-first)."""
+    from handlers.button.payment import build_billing_screen
+    try:
+        _, buttons = build_billing_screen(customer_id)
+        await bot_client.send_message(
+            customer_id, t('onboard.paywall.text'),
+            buttons=buttons, parse_mode='html', link_preview=False)
+    except Exception as e:
+        logger.error(f'Paywall konnte nicht gesendet werden: {e}')
+
+
+async def _auto_deploy_selfbot(bot_client, customer_id, bot_token, bot_username):
+    """Nach bezahltem Abo den Kunden-Bot ohne Admin-Freigabe anlegen."""
+    try:
+        await bot_client.send_message(
+            customer_id, t('onboard.mybot.deploying'), parse_mode='html')
+    except Exception:
+        pass
+
+    ok, output = await _run_deploy(customer_id, bot_token)
+
+    if ok:
+        if not bot_username:
+            bot_username = await _bot_username_from_token(bot_token)
+        bot_link = f'https://t.me/{bot_username}' if bot_username else t('onboard.no_bot_link')
+        support_handle = os.getenv('SUPPORT_HANDLE', '@tele420')
+        _register_container(customer_id)
+        try:
+            await bot_client.send_message(
+                customer_id,
+                t('onboard.customer.ready',
+                  bot_link=bot_link, customer_id=customer_id, support=support_handle),
+                parse_mode='html', link_preview=False)
+        except Exception:
+            pass
+        for admin_id in _admin_ids():
+            try:
+                await bot_client.send_message(
+                    admin_id,
+                    t('onboard.anlegen.done', id=customer_id, bot_link=bot_link, output=output[-500:]),
+                    parse_mode='html', link_preview=False)
+            except Exception:
+                pass
+    else:
+        try:
+            await bot_client.send_message(
+                customer_id, t('onboard.mybot.deploy_failed'), parse_mode='html')
+        except Exception:
+            pass
+        for admin_id in _admin_ids():
+            try:
+                await bot_client.send_message(
+                    admin_id, t('onboard.anlegen.failed', output=output[-800:]), parse_mode='html')
+            except Exception:
+                pass
+
 
 async def handle_mybot_command(event, bot_client):
     """Kunde schickt eigenen Bot-Token: ``mybot <token>``.
@@ -451,6 +524,13 @@ async def handle_mybot_command(event, bot_client):
             pass
         return
 
+    # Pay-first: im Main-Bot nur weiter, wenn Abo/Test aktiv bezahlt ist.
+    if _is_main_bot():
+        from handlers.subscription import is_active
+        if not is_active(sender_id):
+            await _send_paywall(bot_client, sender_id)
+            return
+
     # Absenderdaten sammeln
     try:
         sender = await event.get_sender()
@@ -459,6 +539,11 @@ async def handle_mybot_command(event, bot_client):
                 + (getattr(sender, 'last_name', None) or '')).strip() or t('onboard.stranger')
     except Exception:
         username, name = '', t('onboard.stranger')
+
+    # Vollautomatisch: bezahlt + Flag → direkt deployen, kein Admin-Klick.
+    if _is_main_bot() and _auto_approve_selfbot():
+        await _auto_deploy_selfbot(bot_client, sender_id, bot_token, bot_username)
+        return
 
     _save_pending(sender_id, bot_token, username, name, bot_username)
 
