@@ -80,6 +80,20 @@ def _link_buttons():
     return rows
 
 
+async def _send_customer_ready(client, customer_id, bot_link, support):
+    """Kurze Fertig-Nachricht mit Buttons (Bot öffnen / Support)."""
+    text = t('onboard.customer.ready', bot_link=bot_link, customer_id=customer_id, support=support)
+    buttons = []
+    if bot_link and str(bot_link).startswith('http'):
+        buttons.append([Button.url(t('onboard.ready.btn.open'), bot_link)])
+    sup = (support or '').strip()
+    sup_url = sup if sup.startswith('http') else (f'https://t.me/{sup.lstrip("@")}' if sup else None)
+    if sup_url:
+        buttons.append([Button.url(t('onboard.ready.btn.support'), sup_url)])
+    await client.send_message(
+        customer_id, text, buttons=buttons or None, parse_mode='html', link_preview=False)
+
+
 def build_welcome_stranger():
     """Einstieg für einen Fremden: erklärt kurz und bietet die Aktion an."""
     text = t('onboard.welcome.text')
@@ -344,15 +358,7 @@ async def handle_anlegen_command(event, bot_client):
 
         # Kunde benachrichtigen (falls er den Bot noch nicht geblockt hat)
         try:
-            await bot_client.send_message(
-                customer_id,
-                t('onboard.customer.ready',
-                  bot_link=bot_link,
-                  customer_id=customer_id,
-                  support=support_handle),
-                parse_mode='html',
-                link_preview=False,
-            )
+            await _send_customer_ready(bot_client, customer_id, bot_link, support_handle)
         except Exception as e:
             logger.info(f'Kunde {customer_id} konnte nicht direkt benachrichtigt werden: {e}')
     else:
@@ -519,11 +525,7 @@ async def _auto_deploy_selfbot(bot_client, customer_id, bot_token, bot_username)
         support_handle = os.getenv('SUPPORT_HANDLE', '@tele420')
         _register_container(customer_id)
         try:
-            await bot_client.send_message(
-                customer_id,
-                t('onboard.customer.ready',
-                  bot_link=bot_link, customer_id=customer_id, support=support_handle),
-                parse_mode='html', link_preview=False)
+            await _send_customer_ready(bot_client, customer_id, bot_link, support_handle)
         except Exception:
             pass
         for admin_id in _admin_ids():
@@ -715,11 +717,7 @@ async def callback_cadm_approve(event, rule_id, session, message, data):
             pass
 
         try:
-            await event.client.send_message(
-                customer_id,
-                t('onboard.customer.ready',
-                  bot_link=bot_link, customer_id=customer_id, support=support_handle),
-                parse_mode='html', link_preview=False)
+            await _send_customer_ready(event.client, customer_id, bot_link, support_handle)
         except Exception as e:
             logger.info(f'Kunde {customer_id} konnte nicht benachrichtigt werden: {e}')
     else:
