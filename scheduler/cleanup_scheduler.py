@@ -36,6 +36,17 @@ CHECK_INTERVAL_SECONDS = 60 * 60 * 6   # alle 6h prüfen
 TRIAL_PLUS_GRACE_DAYS = 12             # 5 Tage Trial + 7 Tage Nachfrist
 WARN_BEFORE_DAYS = 1                    # 24h vor Löschung warnen
 
+# Zentrale Abo-Durchsetzung (nur Main-Bot sinnvoll). Standard AUS → keine
+# Verhaltensänderung für Bestandskunden, bis ausdrücklich eingeschaltet.
+try:
+    SUBSCRIPTION_GRACE_DAYS = int(os.getenv('SUBSCRIPTION_GRACE_DAYS', '3'))
+except (TypeError, ValueError):
+    SUBSCRIPTION_GRACE_DAYS = 3
+
+
+def _enforce_subscription():
+    return (os.getenv('ENFORCE_SUBSCRIPTION', '') or '').strip().lower() in ('1', 'true', 'yes')
+
 DELETE_SCRIPT = os.getenv('DELETE_SCRIPT_PATH', '/root/delete_customer_bot.sh')
 CUSTOMERS_DIR = os.getenv('CUSTOMERS_DIR', '/root/customer_bots')
 
@@ -51,6 +62,20 @@ def _parse(iso_date):
         return datetime.fromisoformat(iso_date).date()
     except Exception:
         return None
+
+
+def _subscription_paid_until(customer_id):
+    """``paid_until`` (date) aus der Abo-Tabelle dieses (Main-)Bots, sonst None."""
+    session = get_session()
+    try:
+        from models.models import Subscription
+        sub = session.query(Subscription).filter_by(telegram_user_id=int(customer_id)).first()
+        return _parse(sub.paid_until) if sub else None
+    except Exception as e:
+        logger.warning(f'Abo-Status {customer_id} nicht lesbar: {e}')
+        return None
+    finally:
+        session.close()
 
 
 def _is_active_customer(customer_id):
@@ -144,6 +169,20 @@ class CleanupScheduler:
             keep = _parse(row.kept_until)
             if keep and keep >= today:
                 continue  # ausdrücklich vom Admin behalten
+
+            # Zentrale Abo-Durchsetzung (nur wenn ENFORCE_SUBSCRIPTION aktiv).
+            if _enforce_subscription():
+                paid = _subscription_paid_until(row.customer_id)
+                if paid is not None:
+                    if paid >= today:
+                        continue  # bezahlt/grandfathered → niemals löschen
+                    if (today - paid).days > SUBSCRIPTION_GRACE_DAYS:
+                        await self._delete(row.customer_id, row.container_name)
+                        continue
+                    if not row.warned_at:
+                        await self._warn(row.customer_id, row.container_name)
+                    continue
+                # paid is None → kein Abo-Eintrag → konservativ: normale Alterslogik unten
 
             if _is_active_customer(row.customer_id):
                 continue  # aktiver Kunde – nichts tun

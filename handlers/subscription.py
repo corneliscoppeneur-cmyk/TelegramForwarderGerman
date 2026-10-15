@@ -186,6 +186,46 @@ def activate(user_id, days, stars_paid=0):
         session.close()
 
 
+GRANDFATHER_UNTIL = '2099-12-31'  # „lebenslang" für Bestandskunden
+
+
+def grandfather_from_env():
+    """Bestandskunden aus ``GRANDFATHER_IDS`` dauerhaft als bezahlt markieren.
+
+    Kommagetrennte Telegram-IDs. Idempotent (bei jedem Start gesetzt). Nötig,
+    damit die zentrale Abo-Durchsetzung (ENFORCE_SUBSCRIPTION) die vor der
+    Pay-first-Umstellung angelegten Kunden nicht als „unbezahlt" löscht.
+    """
+    raw = os.getenv('GRANDFATHER_IDS', '')
+    ids = []
+    for part in raw.split(','):
+        part = part.strip()
+        if not part:
+            continue
+        try:
+            ids.append(int(part))
+        except ValueError:
+            pass
+    if not ids:
+        return
+
+    session = get_session()
+    try:
+        for uid in ids:
+            sub = _load(session, uid)
+            if sub is None:
+                sub = Subscription(telegram_user_id=uid, trial_started_at=_today().isoformat())
+                session.add(sub)
+            sub.paid_until = GRANDFATHER_UNTIL
+            session.commit()
+            logger.info(f'Abo: Bestandskunde {uid} grandfathered (paid_until={GRANDFATHER_UNTIL})')
+    except Exception as e:
+        session.rollback()
+        logger.error(f'Abo: Grandfathering fehlgeschlagen: {e}')
+    finally:
+        session.close()
+
+
 def mark_reminder(user_id, tag):
     """Merken, welche Erinnerung schon geschickt wurde ('3d','1d','expired')."""
     session = get_session()

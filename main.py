@@ -172,6 +172,14 @@ async def start_clients():
         cleanup_scheduler = CleanupScheduler(bot_client)
         await cleanup_scheduler.start()
 
+        # Bestandskunden einmalig als bezahlt markieren (GRANDFATHER_IDS),
+        # bevor die Abo-Durchsetzung greifen kann.
+        try:
+            from handlers.subscription import grandfather_from_env
+            grandfather_from_env()
+        except Exception as e:
+            logger.error(f'Grandfathering beim Start fehlgeschlagen: {e}')
+
         # Testphase für den Kunden dieses Containers sicherstellen (No-op bei Admin
         # oder wenn bereits ein Abo-Eintrag existiert). Ohne das würde ein
         # bestehender Container nach dem Update sofort blockiert werden, weil
