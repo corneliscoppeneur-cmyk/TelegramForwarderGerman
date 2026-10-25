@@ -146,7 +146,7 @@ async def _handle_anlegen(event, client):
 
 
 # Callback-Präfixe, die auch Fremde bedienen dürfen (Onboarding).
-STRANGER_CALLBACKS = ('onboard_',)
+STRANGER_CALLBACKS = ('onboard_', 'fu:')
 
 
 # 注册回调处理器

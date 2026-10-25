@@ -286,6 +286,23 @@ class ManagedContainer(Base):
     warned_at = Column(String, nullable=True)          # ISO-Datum: Warnung an Admin
     kept_until = Column(String, nullable=True)         # ISO-Datum: /keep-Ablauf, nicht löschen bis
     deleted_at = Column(String, nullable=True)         # ISO-Datum: schon gelöscht (Historie)
+    followup_stage = Column(String, nullable=True)     # None|'d1'|'d3'|'end'|'lost'|'paid'|'legacy'
+
+
+class Referral(Base):
+    """Empfehlung: Bestandskunde (referrer) hat Neukunden (referred) geworben.
+
+    Angelegt, wenn der Neukunde den Main-Bot über ``/start ref_<id>`` startet.
+    Beim ersten Kauf des Neukunden bekommt der Werber die Hälfte der gekauften
+    Tage gutgeschrieben (einmalig, ``rewarded_at``).
+    """
+    __tablename__ = 'referrals'
+
+    referred_id = Column(Integer, primary_key=True)
+    referrer_id = Column(Integer, nullable=False)
+    created_at = Column(String, nullable=False)        # ISO-Datum
+    rewarded_at = Column(String, nullable=True)        # ISO-Datum: Prämie gutgeschrieben
+    reward_days = Column(Integer, nullable=True)
 
 
 class PendingBotRequest(Base):
@@ -407,7 +424,23 @@ def migrate_db(engine):
                 
     except Exception as e:
         logging.error(f'迁移媒体类型数据时出错: {str(e)}')
-    
+
+    # Empfehlungen + Follow-up-Stufe (nur im Betreiber-Container genutzt)
+    try:
+        if 'referrals' not in existing_tables:
+            logging.info("Erstelle referrals-Tabelle...")
+            Referral.__table__.create(engine)
+        if 'managed_containers' in existing_tables:
+            mc_columns = {c['name'] for c in inspector.get_columns('managed_containers')}
+            if 'followup_stage' not in mc_columns:
+                with engine.begin() as conn:
+                    conn.execute(text('ALTER TABLE managed_containers ADD COLUMN followup_stage VARCHAR DEFAULT NULL'))
+                    # Bestehende Kunden bekommen keine Follow-ups (nicht rückwirkend)
+                    conn.execute(text("UPDATE managed_containers SET followup_stage = 'legacy'"))
+                logging.info('Spalte followup_stage hinzugefügt, Bestandskunden als legacy markiert')
+    except Exception as e:
+        logging.error(f'Migration Follow-up/Empfehlungen fehlgeschlagen: {e}')
+
             
 
 

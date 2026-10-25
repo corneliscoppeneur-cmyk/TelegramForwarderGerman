@@ -90,6 +90,8 @@ async def _send_customer_ready(client, customer_id, bot_link, support):
     sup_url = sup if sup.startswith('http') else (f'https://t.me/{sup.lstrip("@")}' if sup else None)
     if sup_url:
         buttons.append([Button.url(t('onboard.ready.btn.support'), sup_url)])
+    if _is_main_bot():
+        buttons.append([Button.inline(t('fu.btn.ref'), 'fu:ref')])
     await client.send_message(
         customer_id, text, buttons=buttons or None, parse_mode='html', link_preview=False)
 

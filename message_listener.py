@@ -229,6 +229,11 @@ async def handle_bot_message(event, bot_client):
                     from handlers.onboarding import handle_mybot_command
                     await handle_mybot_command(event, bot_client)
                     return
+                # Follow-up-Feedback (Freitext) und Empfehlungslink /start ref_<id>
+                from handlers.followup import capture_feedback, capture_referral
+                if await capture_feedback(event):
+                    return
+                capture_referral(event)
                 from handlers.onboarding import show_stranger_home
                 await show_stranger_home(bot_client, event)
                 return

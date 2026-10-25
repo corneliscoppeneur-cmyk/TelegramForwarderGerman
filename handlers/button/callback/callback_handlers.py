@@ -84,6 +84,7 @@ from handlers.onboarding import (
     callback_cadm_approve,
     callback_cadm_reject,
 )
+from handlers.followup import callback_followup
 import logging
 from utils.i18n import t
 import aiohttp
@@ -775,6 +776,8 @@ CALLBACK_HANDLERS = {
     # Admin-Freigabe der Kunden-Bot-Anfrage (mybot-Flow)
     'cadm_ok': callback_cadm_approve,
     'cadm_no': callback_cadm_reject,
+    # Follow-ups an Testkunden + Empfehlungslink
+    'fu': callback_followup,
     'toggle_current': callback_toggle_current,
     'switch': callback_switch,
     'settings': callback_settings,

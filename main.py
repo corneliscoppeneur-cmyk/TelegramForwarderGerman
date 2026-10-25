@@ -16,6 +16,7 @@ from scheduler.chat_updater import ChatUpdater
 from scheduler.repeat_scheduler import RepeatScheduler
 from scheduler.subscription_scheduler import SubscriptionScheduler
 from scheduler.cleanup_scheduler import CleanupScheduler
+from scheduler.followup_scheduler import FollowupScheduler
 from handlers.bot_handler import send_welcome_message
 from rss.main import app as rss_app
 from utils.log_config import setup_logging
@@ -48,6 +49,7 @@ user_updates_task = None
 repeat_scheduler = None
 subscription_scheduler = None
 cleanup_scheduler = None
+followup_scheduler = None
 
 
 async def init_db_ops():
@@ -172,6 +174,13 @@ async def start_clients():
         cleanup_scheduler = CleanupScheduler(bot_client)
         await cleanup_scheduler.start()
 
+        # Follow-ups an Testkunden + Empfehlungsprämien (nur Main-Bot)
+        from handlers.onboarding import _is_main_bot
+        if _is_main_bot():
+            global followup_scheduler
+            followup_scheduler = FollowupScheduler(bot_client)
+            await followup_scheduler.start()
+
         # Bestandskunden einmalig als bezahlt markieren (GRANDFATHER_IDS),
         # bevor die Abo-Durchsetzung greifen kann.
         try:
@@ -240,6 +249,8 @@ async def start_clients():
         # Aufräumdienst beenden
         if cleanup_scheduler:
             cleanup_scheduler.stop()
+        if followup_scheduler:
+            followup_scheduler.stop()
         # 如果 RSS 服务在运行，停止它
         if 'rss_process' in locals() and rss_process.is_alive():
             rss_process.terminate()
