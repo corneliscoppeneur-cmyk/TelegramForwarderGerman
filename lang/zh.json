@@ -707,6 +707,6 @@
   "widget.demo.sub": "Bot API 10.4 · card right in the chat · color scheme",
   "widget.demo.btn_menu": "Forwards",
   "widget.demo.btn_haptic": "Haptics",
-  "widget.demo.caption": "🧪 <b>Widget demo</b>\nIf you only see this text, your Telegram client doesn't support widgets yet – please update the app.",
+  "widget.demo.caption": "🧪 <b>Widget demo</b> – this is how cards look right in the chat.",
   "widget.demo.unavailable": "⚠️ Widget could not be sent. Send me a message first, then try <code>/widget</code> again."
 }
