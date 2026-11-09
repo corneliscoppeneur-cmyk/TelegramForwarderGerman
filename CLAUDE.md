@@ -19,7 +19,9 @@ Deutscher Fork von Heavrnl/TelegramForwarder (Telethon). Main-Bot = Betreiber-/A
 - HTML-Widgets (`sendWidget`): `utils/bot_api.py` (HTTP-API), `utils/widgets.py` (Jinja2,
   Vorlagen in `widgets/`). Immer Caption als Fallback mitgeben. Test: `scripts/widget_smoke_test.py`.
 - Widget-Buttons öffnen den Bot per Deeplink `https://t.me/<bot>?start=sub_billing|menu_rules`
-  (ausgewertet in `handlers/command_handlers.py::handle_start_command`). Kein `getUpdates`-Poller.
+  (ausgewertet in `handlers/command_handlers.py::handle_start_command`).
+- `scheduler/bot_api_updates.py` pollt `getUpdates` nur, damit die HTTP-API die Chats kennt
+  (sonst `sendWidget` → „chat not found"); `widget_query` wird vorerst leer beantwortet.
 
 ## Automatische Bot-Anlage (BotFather über SM-Session + MCP)
 
@@ -37,7 +39,7 @@ Deutscher Fork von Heavrnl/TelegramForwarder (Telethon). Main-Bot = Betreiber-/A
 - [ ] BotFather-MCP-Instanz auf dem VPS anlegen (`/root/mcp-session-adapter-botfather`), freie
       SM-Session eintragen, `BOTFATHER_MCP_URL` in `.env` des Main-Bots setzen.
 - [ ] Ein-Klick-Anlage mit Zweitkonto end-to-end testen (Username belegt → Suffix; Limit → Admin-Hinweis).
-- [ ] Widget-Phase 2: `getUpdates(allowed_updates=["widget_query"])`-Poller + `answerWidgetQuery`
-      für Aktionen direkt im Widget (z. B. Regel an/aus).
+- [ ] Widget-Phase 2: `widget_query` im Poller fachlich auswerten (Aktionen direkt im Widget,
+      z. B. Regel an/aus) statt nur leer zu bestätigen.
 - [ ] `/setuserpic` für automatisch angelegte Bots (Upload über MCP prüfen).
 - [ ] Session-Rotation: Bot-Zähler je SM-Session, automatisch nächste Session bei Limit 20.

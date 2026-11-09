@@ -50,6 +50,7 @@ repeat_scheduler = None
 subscription_scheduler = None
 cleanup_scheduler = None
 followup_scheduler = None
+bot_api_poller = None
 
 
 async def init_db_ops():
@@ -158,6 +159,15 @@ async def start_clients():
 
         # 注册命令
         await register_bot_commands(bot_client)
+
+        # HTTP-Bot-API warm halten (Widgets, Bot API 10.4) – parallel zu Telethon
+        try:
+            from scheduler.bot_api_updates import BotApiUpdatesPoller
+            global bot_api_poller
+            bot_api_poller = BotApiUpdatesPoller()
+            await bot_api_poller.start()
+        except Exception as e:
+            logger.warning(f'Bot-API-Poller nicht gestartet: {e}')
 
         # Wiederholung läuft über den Bot und braucht daher kein angemeldetes Konto
         global repeat_scheduler, subscription_scheduler

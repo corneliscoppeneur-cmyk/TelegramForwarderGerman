@@ -27,11 +27,12 @@ class BotApiError(Exception):
         self.description = description
 
 
-async def call(method, token=None, timeout=DEFAULT_TIMEOUT, **params):
+async def call(method, token=None, http_timeout=DEFAULT_TIMEOUT, **params):
     """``POST /bot<token>/<method>`` mit JSON-Body. Gibt ``result`` zurück.
 
     ``None``-Werte werden weggelassen; verschachtelte Objekte (z. B.
-    ``reply_markup``) gehen als JSON mit.
+    ``reply_markup``) gehen als JSON mit. ``http_timeout`` ist der HTTP-Timeout
+    (der Telegram-Parameter ``timeout`` von getUpdates bleibt frei nutzbar).
     """
     token = token or os.getenv('BOT_TOKEN')
     if not token:
@@ -40,7 +41,7 @@ async def call(method, token=None, timeout=DEFAULT_TIMEOUT, **params):
     payload = {k: v for k, v in params.items() if v is not None}
     url = f'{API_BASE}/bot{token}/{method}'
     try:
-        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=timeout)) as session:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout(total=http_timeout)) as session:
             async with session.post(url, json=payload) as resp:
                 data = await resp.json(content_type=None)
     except Exception as e:  # Netzwerk/Timeout – Token nicht in der Meldung
