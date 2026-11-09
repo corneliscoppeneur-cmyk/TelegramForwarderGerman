@@ -212,7 +212,10 @@ async def callback_onboard_create_bot(event, rule_id, session, message, data):
 
     # Pay-first: ohne aktives Abo/Test erst zur Paywall.
     if _is_main_bot():
-        from handlers.subscription import is_active
+        from handlers.subscription import ensure_trial, is_active
+        # Erster Kontakt startet die Gratis-Testphase (FREE_TRIAL_DAYS) – so wie es
+        # das Onboarding verspricht. Paywall erst, wenn die Testphase abgelaufen ist.
+        ensure_trial(sender_id)
         if not is_active(sender_id):
             from handlers.button.payment import build_billing_screen
             _, buttons = build_billing_screen(sender_id)
@@ -326,7 +329,10 @@ async def callback_onboard_auto_create(event, rule_id, session, message, data):
         return
 
     if _is_main_bot():
-        from handlers.subscription import is_active
+        from handlers.subscription import ensure_trial, is_active
+        # Erster Kontakt startet die Gratis-Testphase (FREE_TRIAL_DAYS) – so wie es
+        # das Onboarding verspricht. Paywall erst, wenn die Testphase abgelaufen ist.
+        ensure_trial(sender_id)
         if not is_active(sender_id):
             from handlers.button.payment import build_billing_screen
             _, buttons = build_billing_screen(sender_id)
@@ -750,7 +756,10 @@ async def handle_mybot_command(event, bot_client):
 
     # Pay-first: im Main-Bot nur weiter, wenn Abo/Test aktiv bezahlt ist.
     if _is_main_bot():
-        from handlers.subscription import is_active
+        from handlers.subscription import ensure_trial, is_active
+        # Erster Kontakt startet die Gratis-Testphase (FREE_TRIAL_DAYS) – so wie es
+        # das Onboarding verspricht. Paywall erst, wenn die Testphase abgelaufen ist.
+        ensure_trial(sender_id)
         if not is_active(sender_id):
             await _send_paywall(bot_client, sender_id)
             return
