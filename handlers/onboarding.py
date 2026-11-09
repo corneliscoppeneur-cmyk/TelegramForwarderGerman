@@ -250,6 +250,24 @@ async def callback_onboard_create_bot(event, rule_id, session, message, data):
     await event.answer()
 
 
+async def handle_widget_command(event, bot_client):
+    """``/widget`` – Demo-Karte (HTML-Widget, Bot API 10.4) an den Absender schicken.
+
+    Für Admins wie für Fremde erlaubt: zeigt nur, wie Widgets in diesem Client
+    aussehen. Clients ohne Widget-Unterstützung sehen die Caption.
+    """
+    chat_id = event.sender_id
+    link = await widgets.deeplink('menu_rules')
+    sent = await widgets.send(
+        chat_id, 'demo', caption=t('widget.demo.caption'), deeplink=link)
+    if not sent:
+        try:
+            await bot_client.send_message(
+                chat_id, t('widget.demo.unavailable'), parse_mode='html')
+        except Exception:
+            pass
+
+
 async def _sender_profile(event):
     """``(username, display_name)`` des Absenders – robust bei fehlenden Feldern."""
     try:

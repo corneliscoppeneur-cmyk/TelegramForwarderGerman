@@ -1,0 +1,25 @@
+<style>
+body{margin:0;padding:14px 14px 16px}
+h3{margin:0 0 4px;font-size:17px}
+.meta{color:var(--tg-theme-hint-color);font-size:13px;margin-bottom:10px}
+.bar{height:8px;border-radius:4px;background:var(--tg-theme-secondary-bg-color);overflow:hidden;margin-bottom:12px}
+.fill{height:100%;width:62%;background:var(--tg-theme-button-color)}
+.row{display:flex;gap:8px}
+button{flex:1}
+.ghost{background:var(--tg-theme-secondary-bg-color);color:var(--tg-theme-text-color)}
+</style>
+<h3>🧪 {{ t('widget.demo.title') }}</h3>
+<div class="meta">{{ t('widget.demo.sub') }} · <span id="s">…</span></div>
+<div class="bar"><div class="fill"></div></div>
+<div class="row">
+  {% if deeplink %}
+  <button onclick="TelegramWidget.openTelegramLink('{{ deeplink }}')">{{ t('widget.demo.btn_menu') }}</button>
+  {% endif %}
+  <button class="ghost" onclick="TelegramWidget.HapticFeedback.impactOccurred('medium')">{{ t('widget.demo.btn_haptic') }}</button>
+</div>
+<script>
+var s=document.getElementById('s');
+s.textContent=TelegramWidget.colorScheme;
+TelegramWidget.onEvent('themeChanged',function(){s.textContent=TelegramWidget.colorScheme;});
+TelegramWidget.ready();
+</script>

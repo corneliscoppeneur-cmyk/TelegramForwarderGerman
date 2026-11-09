@@ -702,5 +702,11 @@
   "widget.sub.choose": "Paket wählen",
   "widget.rules.title": "Deine Weiterleitungen",
   "widget.rules.empty": "Noch keine Weiterleitung eingerichtet.",
-  "widget.rules.open": "Übersicht öffnen"
+  "widget.rules.open": "Übersicht öffnen",
+  "widget.demo.title": "Widget-Demo",
+  "widget.demo.sub": "Bot API 10.4 · Karte direkt im Chat · Farbschema",
+  "widget.demo.btn_menu": "Weiterleitungen",
+  "widget.demo.btn_haptic": "Haptik",
+  "widget.demo.caption": "🧪 <b>Widget-Demo</b>\nSiehst du nur diesen Text, unterstützt dein Telegram-Client noch keine Widgets – bitte App aktualisieren.",
+  "widget.demo.unavailable": "⚠️ Widget konnte nicht gesendet werden. Schick mir zuerst eine Nachricht und versuche <code>/widget</code> dann erneut."
 }
