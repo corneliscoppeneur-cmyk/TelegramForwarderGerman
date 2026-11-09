@@ -719,6 +719,13 @@ async def handle_changelog_command(event):
 async def handle_start_command(event):
     """处理 start 命令"""
 
+    # Deeplink-Parameter (z. B. aus Widget-Buttons): /start sub_billing | menu_rules
+    parts = (event.message.text or '').split(maxsplit=1)
+    param = parts[1].strip() if len(parts) == 2 else ''
+    if param in ('sub_billing', 'menu_rules'):
+        await _handle_start_deeplink(event, param)
+        return
+
     connected = await is_connected()
     if connected:
         welcome_text = t("cmd.start.text", version=VERSION)
@@ -742,6 +749,36 @@ async def handle_start_command(event):
         link_preview=False,
         buttons=build_main_menu(connected, event.sender_id),
     )
+
+async def _handle_start_deeplink(event, param):
+    """``/start <param>`` aus Widget-/Deeplink-Buttons direkt zum passenden Screen."""
+    await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
+    if param == 'sub_billing':
+        from handlers.button.payment import build_billing_screen
+        text, buttons = build_billing_screen(event.sender_id)
+    else:
+        from handlers.button.menu import build_rule_overview
+        from utils import widgets
+        session = get_session()
+        try:
+            text, buttons = build_rule_overview(session)
+            rules = [
+                {'enabled': bool(r.enable_rule),
+                 'source': (r.source_chat.name or '')[:24],
+                 'target': (r.target_chat.name or '')[:24]}
+                for r in session.query(models.ForwardRule)
+                                .order_by(models.ForwardRule.source_chat_id, models.ForwardRule.id)
+                                .limit(8).all()
+            ]
+        finally:
+            session.close()
+        # Übersichtskarte als Widget (still, wenn nicht möglich)
+        await widgets.send(event.sender_id, 'rules_overview', caption=t('widget.rules.title'),
+                           rules=rules, deeplink=None)
+    await reply_and_delete(
+        event, text, delete_after_seconds=-1, parse_mode='html',
+        link_preview=False, buttons=buttons)
+
 
 async def handle_help_command(event, command):
     """处理帮助命令"""

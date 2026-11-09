@@ -81,6 +81,7 @@ from handlers.onboarding import (
     callback_onboard_close,
     callback_onboard_selfbot,
     callback_onboard_create_bot,
+    callback_onboard_auto_create,
     callback_cadm_approve,
     callback_cadm_reject,
 )
@@ -773,6 +774,7 @@ CALLBACK_HANDLERS = {
     'onboard_close': callback_onboard_close,
     'onboard_selfbot': callback_onboard_selfbot,
     'onboard_create_bot': callback_onboard_create_bot,
+    'onboard_auto_create': callback_onboard_auto_create,
     # Admin-Freigabe der Kunden-Bot-Anfrage (mybot-Flow)
     'cadm_ok': callback_cadm_approve,
     'cadm_no': callback_cadm_reject,

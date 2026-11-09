@@ -21,6 +21,7 @@ from enums.enums import AddMode, ForwardMode
 from handlers.button.chat_picker import build_picker, filter_chats, find_chat, load_chats
 from managers.state_manager import state_manager
 from models.db_operations import create_forward_rule
+from utils.buttons import styled_inline, STYLE_DANGER, STYLE_SUCCESS
 from utils.i18n import t
 
 logger = logging.getLogger(__name__)
@@ -85,7 +86,7 @@ def _mode_buttons():
         [Button.inline(t('wizard.btn.mode_all'), 'wz_mode:all')],
         [Button.inline(t('wizard.btn.mode_only'), 'wz_mode:only')],
         [Button.inline(t('wizard.btn.mode_except'), 'wz_mode:except')],
-        [Button.inline(t('menu.btn.cancel'), 'menu_main')],
+        [styled_inline(t('menu.btn.cancel'), 'menu_main', STYLE_DANGER)],
     ]
 
 
@@ -213,7 +214,7 @@ async def callback_wizard_mode(event, rule_id, session, message, data):
         if mode in ('only', 'except'):
             buttons.append([Button.inline(t('wizard.btn.set_words_now'), f'words:{rule.id}:0')])
         buttons.append([Button.inline(t('menu.btn.settings'), f'rule_settings:{rule.id}')])
-        buttons.append([Button.inline(t('wizard.btn.finish'), f'rule_card:{rule.id}')])
+        buttons.append([styled_inline(t('wizard.btn.finish'), f'rule_card:{rule.id}', STYLE_SUCCESS)])
 
         await message.edit(text, buttons=buttons, parse_mode='html', link_preview=False)
         await event.answer()

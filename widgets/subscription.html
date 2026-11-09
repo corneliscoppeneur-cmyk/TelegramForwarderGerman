@@ -1,0 +1,20 @@
+<style>
+body{margin:0;padding:14px 14px 16px}
+h3{margin:0 0 6px;font-size:17px}
+.state{font-size:14px;margin-bottom:8px}
+.bar{height:8px;border-radius:4px;background:var(--tg-theme-secondary-bg-color);overflow:hidden;margin-bottom:6px}
+.fill{height:100%;background:var(--tg-theme-button-color)}
+.fill.warn{background:var(--tg-theme-destructive-text-color)}
+.meta{color:var(--tg-theme-hint-color);font-size:12px;margin-bottom:12px}
+button{width:100%}
+</style>
+<h3>⭐ {{ t('widget.sub.title') }}</h3>
+<div class="state">{{ state_text }}</div>
+{% if percent is not none %}
+<div class="bar"><div class="fill{% if percent < 20 %} warn{% endif %}" style="width:{{ percent }}%"></div></div>
+<div class="meta">{{ t('widget.sub.days', days=days_left) }}</div>
+{% endif %}
+{% if deeplink %}
+<button onclick="TelegramWidget.openTelegramLink('{{ deeplink }}')">{{ t('widget.sub.choose') }}</button>
+{% endif %}
+<script>TelegramWidget.ready();</script>

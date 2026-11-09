@@ -17,7 +17,7 @@ from telethon import Button
 from enums.enums import ForwardMode
 from models.models import ForwardRule, Keyword, ReplaceRule
 from handlers.subscription import is_admin_user
-from utils.buttons import styled_inline, STYLE_SUCCESS, STYLE_DANGER
+from utils.buttons import styled_inline, STYLE_SUCCESS, STYLE_DANGER, STYLE_PRIMARY
 from utils.i18n import t
 
 logger = logging.getLogger(__name__)
@@ -60,7 +60,7 @@ def build_main_menu(connected=True, user_id=None):
         ]
 
     buttons = [
-        [Button.inline(t('menu.btn.new_forward'), 'wizard_start')],
+        [styled_inline(t('menu.btn.new_forward'), 'wizard_start', STYLE_PRIMARY)],
         [Button.inline(t('menu.btn.my_forwards'), 'menu_rules:0')],
         [Button.inline(t('menu.btn.how_it_works'), 'menu_help')],
         [Button.inline(t('menu.btn.sales'), 'sales')],
@@ -89,7 +89,7 @@ def build_rule_overview(session, page=0):
 
     if total == 0:
         return t('menu.rules.empty'), [
-            [Button.inline(t('menu.btn.new_forward'), 'wizard_start')],
+            [styled_inline(t('menu.btn.new_forward'), 'wizard_start', STYLE_PRIMARY)],
             [Button.inline(t('menu.btn.back_main'), 'menu_main')],
         ]
 
@@ -199,7 +199,7 @@ def build_delete_confirm(session, rule_id):
 def build_help_page():
     """Kurzanleitung „So funktioniert's“."""
     buttons = [
-        [Button.inline(t('menu.btn.new_forward'), 'wizard_start')],
+        [styled_inline(t('menu.btn.new_forward'), 'wizard_start', STYLE_PRIMARY)],
         [Button.inline(t('menu.btn.back_main'), 'menu_main')],
     ]
     return t('menu.help.text'), buttons

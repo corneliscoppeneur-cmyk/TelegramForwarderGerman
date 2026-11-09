@@ -1,0 +1,16 @@
+# Zusatzdatei NUR für den Main-Bot auf dem VPS: hängt den Container zusätzlich
+# ins Session-Manager-Netz, damit er den BotFather-MCP erreicht
+# (http://telegram-mcp-botfather:8765/mcp). Kunden-Container brauchen das nicht.
+#
+# Start:
+#   docker compose -f docker-compose.yml -f docker-compose.mcp.yml up -d --build
+services:
+  telegram-forwarder:
+    networks:
+      - default
+      - sm
+
+networks:
+  sm:
+    external: true
+    name: telegram-datenbank_default

@@ -1,0 +1,23 @@
+<style>
+body{margin:0;padding:14px 14px 16px}
+h3{margin:0 0 8px;font-size:17px}
+table{width:100%;border-collapse:collapse;font-size:14px;margin-bottom:12px}
+td{padding:6px 0;border-bottom:1px solid var(--tg-theme-section-separator-color)}
+td.arrow{color:var(--tg-theme-hint-color);width:22px;text-align:center}
+.empty{color:var(--tg-theme-hint-color);margin-bottom:12px}
+button{width:100%}
+</style>
+<h3>🔁 {{ t('widget.rules.title') }}</h3>
+{% if rules %}
+<table>
+{% for r in rules %}
+<tr><td>{{ '🟢' if r.enabled else '⚪️' }} {{ r.source }}</td><td class="arrow">➜</td><td>{{ r.target }}</td></tr>
+{% endfor %}
+</table>
+{% else %}
+<div class="empty">{{ t('widget.rules.empty') }}</div>
+{% endif %}
+{% if deeplink %}
+<button onclick="TelegramWidget.openTelegramLink('{{ deeplink }}')">{{ t('widget.rules.open') }}</button>
+{% endif %}
+<script>TelegramWidget.ready();</script>

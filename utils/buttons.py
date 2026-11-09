@@ -1,21 +1,20 @@
-"""Farbige Inline-Buttons – vorwärtskompatibel.
+"""Farbige Inline-Buttons – vorwärts- und rückwärtskompatibel.
 
 Bot API 10.3 führt ``InlineKeyboardButton.style`` ein
 (``"danger"`` = rot, ``"success"`` = grün, ``"primary"`` = blau).
 
-Telethon 1.38.1 (aktuell in den Kunden-Containern) kennt dieses Feld noch
-nicht. Damit die Bestandscontainer NICHT brechen, setzt ``styled_inline`` die
-Farbe nur, wenn die installierte Telethon-Version sie unterstützt. Andernfalls
-verhält sich der Helfer exakt wie ``telethon.Button.inline`` – gleiche Buttons
-wie bisher, nur ohne Farbe. Nach einem geprüften Telethon-Upgrade werden die
-Farben automatisch aktiv, ohne weitere Code-Änderung.
+Telethon >= 1.45 (Layer 229) bietet dafür ``Button.inline(text, data, style=…)``
+und ``Button.url(text, url, style=…)``. Ältere Telethon-Versionen (z. B. 1.38 in
+noch nicht neu gebauten Kunden-Containern) kennen den Parameter nicht. Damit
+Bestandscontainer NICHT brechen, setzt ``styled_inline`` die Farbe nur, wenn
+die installierte Telethon-Version sie unterstützt. Andernfalls verhält sich der
+Helfer exakt wie ``telethon.Button.inline``.
 """
 
 import inspect
 import logging
 
 from telethon import Button
-from telethon.tl.types import KeyboardButtonCallback
 
 logger = logging.getLogger(__name__)
 
@@ -26,10 +25,9 @@ STYLE_PRIMARY = 'primary'  # blau
 
 
 def _telethon_supports_style():
-    """Prüft einmalig, ob KeyboardButtonCallback ein ``style``-Feld kennt."""
+    """Prüft einmalig, ob ``Button.inline`` einen ``style``-Parameter kennt."""
     try:
-        params = inspect.signature(KeyboardButtonCallback.__init__).parameters
-        return 'style' in params
+        return 'style' in inspect.signature(Button.inline).parameters
     except Exception:
         return False
 
@@ -53,10 +51,19 @@ def styled_inline(text, data, style=None):
     Die Farbe wird nur gesetzt, wenn Telethon sie unterstützt (sonst identisch
     zu ``Button.inline``).
     """
-    btn = Button.inline(text, data)
     if style and _SUPPORTS_STYLE:
         try:
-            btn.style = style
-        except Exception:
-            pass
-    return btn
+            return Button.inline(text, data, style=style)
+        except Exception as e:
+            logger.debug(f'Button-Style {style!r} nicht gesetzt: {e}')
+    return Button.inline(text, data)
+
+
+def styled_url(text, url, style=None):
+    """URL-Button, optional farbig (gleiche Regeln wie ``styled_inline``)."""
+    if style and _SUPPORTS_STYLE:
+        try:
+            return Button.url(text, url, style=style)
+        except Exception as e:
+            logger.debug(f'Button-Style {style!r} nicht gesetzt: {e}')
+    return Button.url(text, url)

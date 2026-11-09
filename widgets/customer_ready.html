@@ -1,0 +1,17 @@
+<style>
+body{margin:0;padding:14px 14px 16px}
+h3{margin:0 0 4px;font-size:17px}
+.meta{color:var(--tg-theme-hint-color);font-size:13px;margin-bottom:12px}
+.row{display:flex;gap:8px}
+button{flex:1}
+.ghost{background:var(--tg-theme-secondary-bg-color);color:var(--tg-theme-text-color)}
+</style>
+<h3>🎉 {{ t('widget.ready.title') }}</h3>
+<div class="meta">{{ t('widget.ready.sub', id=customer_id, days=trial_days) }}</div>
+<div class="row">
+  <button onclick="TelegramWidget.openTelegramLink('{{ bot_link }}')">🤖 {{ t('widget.ready.open') }}</button>
+  {% if support_url %}
+  <button class="ghost" onclick="TelegramWidget.openLink('{{ support_url }}')">💬 {{ t('widget.ready.support') }}</button>
+  {% endif %}
+</div>
+<script>TelegramWidget.ready();</script>

@@ -475,6 +475,35 @@ Schicke dem Bot einen Nachrichten-Link — die Nachricht wird in den aktuellen C
 
 Sofern `.env` entsprechend konfiguriert: In einem bereits gebundenen Chat `/ufb_bind <forum_domain>` verwenden — 3-fache Sperr-Synchronisation. `/ufb_item_change` wechselt zwischen: Startseiten-Stichwort / Startseiten-Nutzername / Inhaltsseiten-Stichwort / Inhaltsseiten-Nutzername.
 
+## 🤖 Automatische Bot-Anlage (Main-Bot)
+
+Der Main-Bot kann Kunden-Bots selbst bei @BotFather anlegen – über eine Session aus dem
+Session Manager, angesprochen per telegram-mcp (eigene Instanz `telegram-mcp-botfather`).
+Kunden sehen dann den Button **„Bot automatisch anlegen"**, Admins können `/anlegen <kunden_id>`
+ohne Token schicken.
+
+```env
+# .env des Main-Bots
+BOTFATHER_MCP_URL=http://telegram-mcp-botfather:8765/mcp
+# Account-Label im MCP (Telefon ohne +), nur nötig wenn die Instanz mehrere Sessions hält
+BOTFATHER_MCP_ACCOUNT=
+```
+
+Der Main-Bot muss das Session-Manager-Netz erreichen:
+`docker compose -f docker-compose.yml -f docker-compose.mcp.yml up -d --build`.
+Ein Telegram-Konto darf höchstens 20 Bots besitzen; ist das Limit erreicht, meldet der Bot
+das dem Admin, der im MCP-Adapter die nächste `SESSION_ID` einträgt.
+
+## 🧩 HTML-Widgets (Bot API 10.4)
+
+Fertig-Karte nach der Bot-Anlage, Abo-Quittung und Weiterleitungs-Übersicht werden als
+HTML-Widgets gesendet (`utils/widgets.py`, Vorlagen in `widgets/`). Clients ohne
+Widget-Unterstützung sehen die Caption. Test:
+
+```bash
+python scripts/widget_smoke_test.py <chat_id>
+```
+
 ## 📝 Befehlsliste
 
 ```bash

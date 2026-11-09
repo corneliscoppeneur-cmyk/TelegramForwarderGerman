@@ -23,7 +23,10 @@ from telethon import Button
 
 from handlers.subscription import is_admin_user
 from models.models import ManagedContainer, PendingBotRequest, get_session
+from services import botfather
+from utils import widgets
 from utils.bot_config import get_config, set_config
+from utils.buttons import styled_inline, STYLE_DANGER, STYLE_PRIMARY, STYLE_SUCCESS
 from utils.host_jobs import host_jobs_available, run_host_job
 from utils.i18n import t
 
@@ -81,13 +84,27 @@ def _link_buttons():
 
 
 async def _send_customer_ready(client, customer_id, bot_link, support):
-    """Kurze Fertig-Nachricht mit Buttons (Bot öffnen / Support)."""
+    """Kurze Fertig-Nachricht mit Buttons (Bot öffnen / Support).
+
+    Zuerst als HTML-Widget (Bot API 10.4, Karte im Chat); kann der Client oder
+    die API das nicht, kommt die bisherige Textnachricht mit Buttons.
+    """
     text = t('onboard.customer.ready', bot_link=bot_link, customer_id=customer_id, support=support)
+    sup = (support or '').strip()
+    sup_url = sup if sup.startswith('http') else (f'https://t.me/{sup.lstrip("@")}' if sup else None)
+
+    if bot_link and str(bot_link).startswith('http'):
+        from handlers.subscription import TRIAL_DAYS
+        sent = await widgets.send(
+            customer_id, 'customer_ready', caption=text,
+            customer_id=customer_id, trial_days=TRIAL_DAYS,
+            bot_link=bot_link, support_url=sup_url)
+        if sent:
+            return
+
     buttons = []
     if bot_link and str(bot_link).startswith('http'):
         buttons.append([Button.url(t('onboard.ready.btn.open'), bot_link)])
-    sup = (support or '').strip()
-    sup_url = sup if sup.startswith('http') else (f'https://t.me/{sup.lstrip("@")}' if sup else None)
     if sup_url:
         buttons.append([Button.url(t('onboard.ready.btn.support'), sup_url)])
     if _is_main_bot():
@@ -103,9 +120,14 @@ def build_welcome_stranger():
         text += '\n\n' + t('onboard.network.note')
     text += '\n\n' + t('login.security.note')
     buttons = []
-    # Im Main-Bot ist der geführte Selbst-Weg die Haupt-Aktion.
+    # Im Main-Bot ist der geführte Selbst-Weg die Haupt-Aktion; mit BotFather-
+    # Automation (BOTFATHER_MCP_URL) steht die Ein-Klick-Anlage ganz oben.
     if _is_main_bot():
-        buttons.append([Button.inline(t('onboard.btn.create_bot'), 'onboard_create_bot')])
+        if botfather.is_configured():
+            buttons.append([styled_inline(t('onboard.btn.auto_create'), 'onboard_auto_create', STYLE_PRIMARY)])
+            buttons.append([Button.inline(t('onboard.btn.create_bot'), 'onboard_create_bot')])
+        else:
+            buttons.append([styled_inline(t('onboard.btn.create_bot'), 'onboard_create_bot', STYLE_PRIMARY)])
     buttons += [
         [Button.inline(t('onboard.btn.request'), 'onboard_request')],
         [Button.inline(t('onboard.btn.selfbot'), 'onboard_selfbot')],
@@ -228,6 +250,101 @@ async def callback_onboard_create_bot(event, rule_id, session, message, data):
     await event.answer()
 
 
+async def _sender_profile(event):
+    """``(username, display_name)`` des Absenders – robust bei fehlenden Feldern."""
+    try:
+        sender = await event.get_sender()
+        username = getattr(sender, 'username', None) or ''
+        name = ((getattr(sender, 'first_name', None) or '') + ' '
+                + (getattr(sender, 'last_name', None) or '')).strip() or t('onboard.stranger')
+    except Exception:
+        username, name = '', t('onboard.stranger')
+    return username, name
+
+
+async def _notify_admins_text(bot_client, text):
+    for admin_id in _admin_ids():
+        try:
+            await bot_client.send_message(admin_id, text, parse_mode='html', link_preview=False)
+        except Exception as e:
+            logger.warning(f'Admin {admin_id} nicht erreichbar: {e}')
+
+
+async def _create_bot_via_botfather(bot_client, customer_id, username, name):
+    """Bot bei @BotFather über SM-Session + MCP anlegen.
+
+    Gibt ``(token, bot_username)`` zurück oder ``None`` nach Fehler (Admin ist
+    dann schon informiert, Aufrufer zeigt dem Kunden den manuellen Weg).
+    """
+    try:
+        client = botfather.BotFatherClient()
+        display = t('onboard.auto.bot_name', name=(name or '').split()[0] if name else 'Mein')
+        token, bot_username = await client.create_bot(display, username, customer_id)
+        await client.set_description(bot_username, t('onboard.auto.bot_description'))
+        return token, bot_username
+    except botfather.AccountExhausted:
+        logger.error(f'BotFather-Session ausgeschöpft (Kunde {customer_id})')
+        await _notify_admins_text(bot_client, t('onboard.auto.admin_exhausted', id=customer_id))
+    except Exception as e:
+        logger.error(f'Automatische Bot-Anlage für Kunde {customer_id} fehlgeschlagen: {e}')
+        await _notify_admins_text(
+            bot_client, t('onboard.auto.admin_failed', id=customer_id, error=str(e)[:300]))
+    return None
+
+
+async def callback_onboard_auto_create(event, rule_id, session, message, data):
+    """Ein-Klick-Anlage: BotFather-Dialog automatisch, dann Deploy (Main-Bot, pay-first)."""
+    sender_id = event.sender_id
+
+    if not botfather.is_configured():
+        await callback_onboard_create_bot(event, rule_id, session, message, data)
+        return
+
+    if _is_main_bot():
+        from handlers.subscription import is_active
+        if not is_active(sender_id):
+            from handlers.button.payment import build_billing_screen
+            _, buttons = build_billing_screen(sender_id)
+            try:
+                await message.edit(
+                    t('onboard.paywall.text'), buttons=buttons,
+                    parse_mode='html', link_preview=False)
+            except Exception as e:
+                if 'not modified' not in str(e).lower():
+                    raise
+            await event.answer()
+            return
+
+    # Doppelklick-Schutz: läuft schon eine Anlage für diesen Kunden?
+    if _pending_requests.get(sender_id, {}).get('auto_running'):
+        await event.answer(t('onboard.alert.already_sent'), alert=True)
+        return
+    _pending_requests.setdefault(sender_id, {})['auto_running'] = True
+
+    await event.answer()
+    try:
+        await message.edit(t('onboard.auto.running'), parse_mode='html', link_preview=False)
+    except Exception:
+        pass
+
+    username, name = await _sender_profile(event)
+    try:
+        result = await _create_bot_via_botfather(event.client, sender_id, username, name)
+        if result is None:
+            # Fallback: manuelle Anleitung (Guide bearbeitet die Nachricht)
+            try:
+                await event.client.send_message(
+                    sender_id, t('onboard.auto.failed'), parse_mode='html')
+            except Exception:
+                pass
+            await callback_onboard_create_bot(event, rule_id, session, message, data)
+            return
+        token, bot_username = result
+        await _auto_deploy_selfbot(event.client, sender_id, token, bot_username)
+    finally:
+        _pending_requests.get(sender_id, {}).pop('auto_running', None)
+
+
 async def callback_onboard_request(event, rule_id, session, message, data):
     """Fremder klickt „Bot anfordern" – schickt Admin eine Anleitung."""
     sender_id = event.sender_id
@@ -308,7 +425,8 @@ async def _notify_admins(bot_client, customer_id, name, username):
 # Admin-Befehl: /anlegen <kunden_id> <bot_token>
 # --------------------------------------------------------------------------
 
-_ANLEGEN_RE = re.compile(r'^/anlegen\s+(-?\d+)\s+(\S+)\s*$')
+# Token optional: ohne Token wird der Bot automatisch bei @BotFather angelegt.
+_ANLEGEN_RE = re.compile(r'^/anlegen\s+(-?\d+)(?:\s+(\S+))?\s*$')
 
 # Kunde schickt seinen eigenen Bot-Token: ``mybot 1234567890:ABCdef...``
 _MYBOT_RE = re.compile(r'^mybot\s+(\d{5,}:[A-Za-z0-9_-]{20,})\s*$', re.IGNORECASE)
@@ -331,8 +449,24 @@ async def handle_anlegen_command(event, bot_client):
     customer_id = int(match.group(1))
     bot_token = match.group(2)
 
-    # Kurze Rückmeldung, damit der Admin weiß dass der Deploy läuft
-    status = await event.reply(t('onboard.anlegen.started', id=customer_id), parse_mode='html')
+    if not bot_token:
+        if not botfather.is_configured():
+            await event.reply(t('onboard.anlegen.usage'), parse_mode='html', link_preview=False)
+            return
+        status = await event.reply(t('onboard.anlegen.creating', id=customer_id), parse_mode='html')
+        info = _pending_requests.get(customer_id, {})
+        result = await _create_bot_via_botfather(
+            bot_client, customer_id, info.get('username', ''), info.get('name', ''))
+        if result is None:
+            return  # Admin wurde bereits mit Fehlerdetails informiert
+        bot_token, _ = result
+        try:
+            await status.edit(t('onboard.anlegen.started', id=customer_id), parse_mode='html')
+        except Exception:
+            pass
+    else:
+        # Kurze Rückmeldung, damit der Admin weiß dass der Deploy läuft
+        status = await event.reply(t('onboard.anlegen.started', id=customer_id), parse_mode='html')
 
     ok, output = await _run_deploy(customer_id, bot_token)
 
@@ -725,8 +859,8 @@ async def callback_cadm_approve(event, rule_id, session, message, data):
     else:
         # Fehlgeschlagen: Zeile behalten, Buttons wieder anbieten für Retry.
         buttons = [[
-            Button.inline(t('onboard.cadm.btn.approve'), f'cadm_ok:{customer_id}'),
-            Button.inline(t('onboard.cadm.btn.reject'), f'cadm_no:{customer_id}'),
+            styled_inline(t('onboard.cadm.btn.approve'), f'cadm_ok:{customer_id}', STYLE_SUCCESS),
+            styled_inline(t('onboard.cadm.btn.reject'), f'cadm_no:{customer_id}', STYLE_DANGER),
         ]]
         try:
             await message.edit(

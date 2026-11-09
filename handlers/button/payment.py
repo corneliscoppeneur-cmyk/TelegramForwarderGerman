@@ -19,7 +19,9 @@ from telethon.tl.types import (
     UpdateNewMessage,
 )
 
-from handlers.subscription import PACKAGES, status
+from handlers.subscription import PACKAGES, TRIAL_DAYS, status
+from utils import widgets
+from utils.buttons import styled_inline, STYLE_SUCCESS
 from utils.common import get_main_module
 from utils.i18n import t
 
@@ -50,9 +52,25 @@ def build_billing_screen(user_id):
     buttons = []
     for pkg in PACKAGES:
         label = t(pkg['label_key'], stars=pkg['stars'], days=pkg['days'])
-        buttons.append([Button.inline(label, f'sub_buy:{pkg["days"]}:{pkg["stars"]}')])
+        buttons.append([styled_inline(label, f'sub_buy:{pkg["days"]}:{pkg["stars"]}', STYLE_SUCCESS)])
     buttons.append([Button.inline(t('menu.btn.back_main'), 'menu_main')])
     return text, buttons
+
+
+async def send_subscription_widget(user_id, caption=None):
+    """Abo-Karte als HTML-Widget (Resttage als Balken). Still, wenn nicht möglich."""
+    st = status(user_id)
+    if st['state'] == 'admin':
+        return False
+    days = st.get('days_left')
+    percent = None
+    if days is not None:
+        total = TRIAL_DAYS if st['state'] == 'trial' else 30
+        percent = max(0, min(100, round(100 * days / max(total, 1))))
+    link = await widgets.deeplink('sub_billing')
+    return await widgets.send(
+        user_id, 'subscription', caption=caption or _fmt_state(st),
+        state_text=_fmt_state(st), percent=percent, days_left=days, deeplink=link)
 
 
 async def callback_billing(event, rule_id, session, message, data):
@@ -159,13 +177,13 @@ async def on_successful_payment(event):
     activate(event.sender_id, days=days, stars_paid=stars)
 
     st = status(event.sender_id)
-    try:
-        await event.reply(
-            t('sub.payment.done', days=days, until=st['paid_until']),
-            parse_mode='html',
-        )
-    except Exception as e:
-        logger.warning(f'Bestätigung nach Zahlung nicht zustellbar: {e}')
+    done_text = t('sub.payment.done', days=days, until=st['paid_until'])
+    # Quittung als Abo-Karte (Widget); Fallback: Textnachricht
+    if not await send_subscription_widget(event.sender_id, caption=done_text):
+        try:
+            await event.reply(done_text, parse_mode='html')
+        except Exception as e:
+            logger.warning(f'Bestätigung nach Zahlung nicht zustellbar: {e}')
 
     # Im Main-Bot: Kunde ohne eigenen Bot direkt zum geführten Erstellen leiten.
     try:
@@ -178,10 +196,16 @@ async def on_successful_payment(event):
             finally:
                 session.close()
             if not has_bot:
-                from telethon import Button
+                from services import botfather
+                from utils.buttons import STYLE_PRIMARY
+                if botfather.is_configured():
+                    rows = [[styled_inline(t('onboard.btn.auto_create'), 'onboard_auto_create', STYLE_PRIMARY)],
+                            [Button.inline(t('onboard.btn.create_bot'), 'onboard_create_bot')]]
+                else:
+                    rows = [[styled_inline(t('onboard.btn.create_bot'), 'onboard_create_bot', STYLE_PRIMARY)]]
                 await event.reply(
                     t('onboard.after_pay.create'),
-                    buttons=[[Button.inline(t('onboard.btn.create_bot'), 'onboard_create_bot')]],
+                    buttons=rows,
                     parse_mode='html',
                 )
     except Exception as e:
