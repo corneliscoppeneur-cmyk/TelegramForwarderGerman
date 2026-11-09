@@ -224,10 +224,22 @@ async def handle_bot_message(event, bot_client):
         if getattr(event, 'is_private', False):
             from utils.common import is_admin
             if not await is_admin(event):
+                text_lower = (event.message.text or '').strip().lower()
                 # Widget-Demo darf jeder sehen (zeigt Bot-API-10.4-Karte im Chat)
-                if (event.message.text or '').strip().lower().startswith('/widget'):
+                if text_lower.startswith('/widget'):
                     from handlers.onboarding import handle_widget_command
                     await handle_widget_command(event, bot_client)
+                    return
+                # Widget-Knopf getippt: /start cb_<aktion> → vorhandener Onboarding-Callback
+                from handlers.widget_menu import parse_deeplink, run_deeplink_action, ONBOARDING_ACTIONS
+                action = parse_deeplink(event.message.text)
+                if action and await run_deeplink_action(
+                        bot_client, event.chat_id, event.sender_id, action, ONBOARDING_ACTIONS):
+                    return
+                # /menu → klassische Inline-Buttons (Clients ohne Widgets)
+                if text_lower.startswith('/menu'):
+                    from handlers.onboarding import show_stranger_home
+                    await show_stranger_home(bot_client, event, classic=True)
                     return
                 # Kunde schickt eigenen Bot-Token: ``mybot <token>`` → Freigabe-Flow
                 if (event.message.text or '').strip().lower().startswith('mybot'):

@@ -1,0 +1,19 @@
+<style>
+body{margin:0;padding:12px 12px 14px}
+h3{margin:0 0 10px;font-size:16px}
+.row{display:flex;gap:8px;margin-bottom:8px}
+.row:last-child{margin-bottom:0}
+button{flex:1;min-height:40px;font-size:15px;white-space:normal}
+.ghost{background:var(--tg-theme-secondary-bg-color);color:var(--tg-theme-text-color)}
+.success{background:#2ea043;color:#fff}
+.danger{background:var(--tg-theme-destructive-text-color);color:#fff}
+</style>
+{% if title %}<h3>{{ title }}</h3>{% endif %}
+{% for row in rows %}
+<div class="row">
+  {% for k in row %}
+  <button class="{{ 'primary' if k.style == 'primary' else (k.style or 'ghost') }}" onclick="TelegramWidget.openTelegramLink('{{ k.link }}')">{{ k.label }}</button>
+  {% endfor %}
+</div>
+{% endfor %}
+<script>TelegramWidget.ready();</script>

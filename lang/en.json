@@ -708,5 +708,7 @@
   "widget.demo.btn_menu": "Forwards",
   "widget.demo.btn_haptic": "Haptics",
   "widget.demo.caption": "🧪 <b>Widget demo</b> – this is how cards look right in the chat.",
-  "widget.demo.unavailable": "⚠️ Widget could not be sent. Send me a message first, then try <code>/widget</code> again."
+  "widget.demo.unavailable": "⚠️ Widget could not be sent. Send me a message first, then try <code>/widget</code> again.",
+  "widget.menu.hint": "No buttons visible? Type /menu.",
+  "widget.menu.opening": "⏳ One moment …"
 }

@@ -155,9 +155,16 @@ def build_selfbot_guide():
     return text, buttons
 
 
-async def show_stranger_home(bot_client, event):
-    """Wird aus ``message_listener.handle_bot_message`` aufgerufen (statt Sales-Pitch)."""
+async def show_stranger_home(bot_client, event, classic=False):
+    """Wird aus ``message_listener.handle_bot_message`` aufgerufen (statt Sales-Pitch).
+
+    Zuerst als Widget mit Knöpfen; ``classic=True`` oder Fehlschlag → Inline-Buttons.
+    """
     text, buttons = build_welcome_stranger()
+    if not classic:
+        from handlers.widget_menu import send_menu_widget, ONBOARDING_ACTIONS
+        if await send_menu_widget(event.sender_id, text, buttons, ONBOARDING_ACTIONS):
+            return
     try:
         await event.reply(text, buttons=buttons, parse_mode='html', link_preview=False)
     except Exception as e:

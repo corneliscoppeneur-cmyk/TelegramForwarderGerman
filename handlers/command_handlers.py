@@ -716,13 +716,19 @@ async def handle_changelog_command(event):
     await reply_and_delete(event,UPDATE_INFO, parse_mode='html')
 
 
-async def handle_start_command(event):
-    """处理 start 命令"""
+async def handle_start_command(event, classic=False):
+    """处理 start 命令 – ``classic=True`` erzwingt Inline-Buttons statt Widget (``/menu``)."""
 
-    # Deeplink-Parameter (z. B. aus Widget-Buttons): /start sub_billing | menu_rules
+    # Deeplink-Parameter: /start cb_<aktion> (Widget-Knöpfe) | sub_billing | menu_rules
+    from handlers.widget_menu import parse_deeplink, run_deeplink_action, MENU_ACTIONS, send_menu_widget
     parts = (event.message.text or '').split(maxsplit=1)
     param = parts[1].strip() if len(parts) == 2 else ''
-    if param in ('sub_billing', 'menu_rules'):
+    action = parse_deeplink(event.message.text)
+    if action:
+        await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
+        if await run_deeplink_action(event.client, event.chat_id, event.sender_id, action, MENU_ACTIONS):
+            return
+    elif param in ('sub_billing', 'menu_rules'):
         await _handle_start_deeplink(event, param)
         return
 
@@ -740,6 +746,13 @@ async def handle_start_command(event):
         logger.error(f'Testphase konnte nicht angelegt werden: {e}')
 
     await async_delete_user_message(event.client, event.message.chat_id, event.message.id, 0)
+
+    # Hauptmenü als Widget mit Knöpfen (Bot API 10.4); /menu zeigt die klassische Variante
+    if not classic:
+        rows = build_main_menu(connected, event.sender_id)
+        if await send_menu_widget(event.chat_id, welcome_text, rows, MENU_ACTIONS):
+            return
+
     # Startnachricht bleibt stehen (-1): sie trägt das Hauptmenü.
     await reply_and_delete(
         event,

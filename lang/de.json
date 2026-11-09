@@ -708,5 +708,7 @@
   "widget.demo.btn_menu": "Weiterleitungen",
   "widget.demo.btn_haptic": "Haptik",
   "widget.demo.caption": "🧪 <b>Widget-Demo</b> – so sehen Karten direkt im Chat aus.",
-  "widget.demo.unavailable": "⚠️ Widget konnte nicht gesendet werden. Schick mir zuerst eine Nachricht und versuche <code>/widget</code> dann erneut."
+  "widget.demo.unavailable": "⚠️ Widget konnte nicht gesendet werden. Schick mir zuerst eine Nachricht und versuche <code>/widget</code> dann erneut.",
+  "widget.menu.hint": "Keine Knöpfe sichtbar? Tippe /menu.",
+  "widget.menu.opening": "⏳ Einen Moment …"
 }

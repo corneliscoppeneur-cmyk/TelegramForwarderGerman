@@ -83,6 +83,7 @@ async def handle_command(client, event):
         'clear_all': lambda: handle_clear_all_command(event),
         'ca': lambda: handle_clear_all_command(event),
         'start': lambda: handle_start_command(event),
+        'menu': lambda: handle_start_command(event, classic=True),
         'help': lambda: handle_help_command(event,'help'),
         'h': lambda: handle_help_command(event,'help'),
         'export_keyword': lambda: handle_export_keyword_command(event, command),
