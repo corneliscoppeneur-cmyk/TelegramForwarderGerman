@@ -38,7 +38,11 @@ Deutscher Fork von Heavrnl/TelegramForwarder (Telethon). Main-Bot = Betreiber-/A
 
 - [x] BotFather-MCP-Instanz auf dem VPS (`/root/mcp-session-adapter-botfather`, Port 127.0.0.1:8767,
       SM-Session 82). Session-Wechsel nur nach Abstimmung mit der Suite-Session (Session-Belegung!).
-- [ ] `BOTFATHER_MCP_URL` in `.env` des Main-Bots setzen und Main-Bot mit `docker-compose.mcp.yml` neu bauen.
+- [x] `BOTFATHER_MCP_URL` gesetzt, Main-Bot + Kunde 8427362165 neu gebaut (2026-11-10).
+- [x] Hauptmenü + Onboarding als Widget mit Knöpfen (`handlers/widget_menu.py`, Deeplink `cb_<aktion>`),
+      vom Nutzer im Client bestätigt.
+- [ ] Knöpfe auch in den inneren Abläufen (Assistent, Regelkarte, Einstellungen) statt Inline-Buttons;
+      dafür Callback-Builder so erweitern, dass Rückgabe (Text, Buttons) als Widget gesendet wird.
 - [ ] Ein-Klick-Anlage mit Zweitkonto end-to-end testen (Username belegt → Suffix; Limit → Admin-Hinweis).
 - [ ] Widget-Phase 2: `widget_query` im Poller fachlich auswerten (Aktionen direkt im Widget,
       z. B. Regel an/aus) statt nur leer zu bestätigen.
